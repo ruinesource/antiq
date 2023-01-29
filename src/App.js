@@ -1,25 +1,18 @@
-import logo from './logo.svg';
-import './App.css';
+import { door, orm } from './antiq'
+
+const a = orm('a', () => ({ b }))
+
+const b = orm('b', () => ({ a }))
+
+const c = door(a)
+
+c.put(1, {
+  b: { id: 2, name: 'ok' },
+  e: 'e',
+})
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  return 'hello'
 }
 
-export default App;
+export default App

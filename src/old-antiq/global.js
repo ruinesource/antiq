@@ -7,7 +7,7 @@ const g = {
   items: {}, // { normId: item }
   orms: {}, // { (normId | ormName): orm }
   ids: {}, // { ormName: { id: true } }
-  graph: {}, // { normId: { parentNormId: { ...waysToChild: true } } }
+  graph: {}, // { normId: { parentNormId: { ...waysToChild: true } } } // childNormId?
   childs: {}, // { normId: { childNormId: true } }
   prevItems: {}, // { normId: prev }
   nextItems: {}, // { normId: item }

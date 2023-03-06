@@ -1,4 +1,4 @@
-import { door, stone, back, front } from '*'
+import { door, stone, back, front, list } from '*'
 import Cookie from 'js-cookie'
 
 front(async () => {
@@ -7,6 +7,10 @@ front(async () => {
 })
 
 /*
+  вероятно, требуется отказаться от list и использовать stone для всех списов с пагинацией и пр
+  в остальных списках использовать тупо весь список всегда
+  сущности маппим, как и всегда по орм
+
   WARNING! FULL-INTERACTION NEEDED
   for clean understanding you need to download project on your computer
 
@@ -29,8 +33,15 @@ front(async () => {
   изменений на бэке antiq при этом стандартно не происходит
   на фронте конечно остаются лакомости в виде loading и error, как и для остальных сущностей antiq
 
+// нужно получить массив последовательных операций и операций последущих над результатами предыдущих
+// операции: выполнение функции, аргументами могут быть члены массива
+
   складываем информацию по тому, какими будут первые экраны
   элементы && рендерим для понимания что внутри
+
+  массивы может нужно отфильтровать и найти что-то
+  favoriteBooks.get(userId, pagination, search)
+
 */
 
 // req.c - cookie
@@ -48,48 +59,50 @@ front(async () => {
 //   },
 //   {
 //     get: adminOnly((id) => {
-//       return card.k.get(id)
+//       return card.one(id)
 //     }),
-//     many: ({ filters, pagination }) => {
-//       return card.k.omit('img').many(filters, pagination)
+//     get: ({ filters, pagination }) => {
+//       return card.o('img').get(filters, pagination)
 //     },
 //     put: () => { fetch('', ...) }
 //   }
 // )
 // списки нужно уметь изменять и с пагинацией, и без неё
 // по дефолту списки изменяем полностью
-// put({ list: fullList }) put({ list: splice(startI, deleteEl, ...items) })
+// put({ list: fullList }) put({ list: list(startI, deleteEl, ...items) })
 // type, ...constraints
+// o omit
 
 // операторы:
-// >, <, =, !=, =>, <=, and, or, ~~, !~~
-// total каждого many, если есть пагинация, order desc name desc email
-// k
-// one
-// many
-// put
-// rm
+// includes find order desc name desc email
+// total каждого get, если есть пагинация
+// door
+// get put rm
+// >, <, =, !=, =>, <=, &, |, ~, !~
+// pagination filters search
+// stone - стор для фронтовых нужд
+
 // sql
 
-export const userDoor = door(
+export const users = door(
   'user',
   () => ({
-    name: ['', 'required'],
+    name: ['', 'primary'],
     email: ['', 'primary'],
   }),
   {
-    @form({
-      email: {
-        val: [],
-      },
-      name: [],
-      nameRepeat: {
-        deps: ['name'],
-      },
-    })
+    // @form(type => type ? {
+    //   email: {
+    //     val: [],
+    //   },
+    //   name: [],
+    //   nameRepeat: {
+    //     deps: ['name'],
+    //   },
+    // } : { ...anotherForm })
     register: async ({ name, email }) => {
       // в k валидация и ошибки
-      const user = userDoor.k.put({
+      const user = users.put({
         name,
         email,
       })
@@ -110,22 +123,31 @@ export const userDoor = door(
 
       front(() => Cookie.set('token', token))
     },
+    // можно выполнить метод извне реакта
+    // и хук useData возьмёт значения из кэша, опираясь на аргументы
     login: async ({ email }) => {
-      const [token] = await Promise.all([
-        back(async () => {
-          const user = await userDoor.k.one(`user.email = ${email}`)
-          const { genToken } = require('./util')
+      // метод возвращает сущность с val, loading, error
+      // useApi(api.login) вызов api
+      // useDoor(api.currentUser, args)
 
-          return genToken(user)
-        }),
+      // все сущности, которые находятся в результатах get
+      // записываются во фронтовые сторы, даже если они внутри back
+      // есть ещё safeGet, с ним фронт не засоряется
 
-        userDoor.one(`user.email = '${email}'`),
-      ])
+      // отслеживаем, какие сущности задействованы в каких методах
+      // выполняем их снова при изменении
 
+      const { token, user } = await back(async () => {
+        const user = await users.get({ email })
+        const { genToken } = require('./util')
+
+        if (!user) throw 'no such user'
+
+        return { token: genToken(user), user }
+      })
       front(async () => {
-        const { default: Cookie } = await import('Cookie')
-
         Cookie.set('token', token)
+        Cookie.set('user', user.id)
       })
     },
     currentUser: (req) => {
@@ -140,33 +162,35 @@ export const userDoor = door(
 
         return {
           user: user,
-          token: genToken(userDoor),
+          token: genToken(users),
         }
       })
     },
   }
 )
 
-export const bookDoor = door(
+export const books = door(
   'book',
   () => ({
     name: '',
     img: '',
-    authors: [authorDoor],
-    createdUser: userDoor,
+    authors: [authors],
+    createdUser: users,
+    styles: [''],
     i18n: {
       ru: { desc: '' },
       en: { desc: '' },
     },
   }),
   {
-    put: [loggedOnly, (id, diff) => bookDoor.k.put({ id, ...diff })],
-    rm: [adminOnly, (id) => bookDoor.k.rm(id)],
-    userCreatedBooks: (req) => bookDoor.k.many(`createdUser = ${req.c.userId}`),
+    put: [loggedOnly, (id, diff) => books.put({ id, ...diff })],
+    rm: [adminOnly, (id) => books.rm(id)],
+    userCreatedBooks: ({ from, to }, req) =>
+      books.get({ createdUser: req.c.user }, [from, to]),
   }
 )
 
-export const authorDoor = door(
+export const authors = door(
   'author',
   () => ({
     name: '',
@@ -175,39 +199,40 @@ export const authorDoor = door(
   {
     get: async (id) => {
       const [authorInst, booksPreview] = await Promise.all([
-        authorDoor.k.one({ id }),
-        bookDoor.k.sel('author', 'name').one(`author.id = ${id}`),
+        authors.get(id),
+        books('author', 'name').get(id),
       ])
       return { author: authorInst, booksPreview }
     },
     adminGet: [
       adminOnly,
       (id) => {
-        return authorDoor.k.one({ id })
+        return authors.get(id)
       },
     ],
     allWithoutImg: () => {
-      return authorDoor.k.omit('img').many()
+      return authors.o('img').get()
     },
-    favoriteBooksAuthors: [
+    authorsOfFavoriteBooks: [
       loggedOnly,
-      () => {
-        return authorDoor.k.many(
+      (pagination) => {
+        return authors.get(
           // cross-request
-          `favoriteBooks.k.one
-            author = favoriteBooks.author
-        `
+          // у свойств-массивов есть функции js includes
+          `favoriteBooks.get(favoriteBooks.author.includes(authors.id)).length > 0`,
+          pagination
         )
       },
     ],
   }
 )
 
-export const favoriteBooksStone = stone('favoriteBooks', () => [bookDoor], {
-  many: [
+export const booksLists = door('booksLists', () => [books])
+
+export const favoriteBooks = door('favoriteBooks', () => [books], {
+  getFavoriteBooks: [
     loggedOnly,
-    // stone делает фильтр по id (user по дефолту)
-    ({ filters, pagination }) => favoriteBooksStone.k.many(filters, pagination),
+    ({ filters, pagination }) => favoriteBooks.get(filters, pagination),
   ],
 })
 

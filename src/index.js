@@ -1,6 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App'
+import './st.js'
+
+function App() {
+  return <div className="App"></div>
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(

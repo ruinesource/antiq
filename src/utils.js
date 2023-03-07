@@ -1,4 +1,6 @@
-export const isDoor = (x) => x && x.door === true
+import g from './g.js'
+
+export const isDoor = (x) => x && x.name && g.desc.hasOwnProperty(x.name)
 
 export const isPlainObject = (x) => x && {}.__proto__ === x.__proto__
 
@@ -23,3 +25,10 @@ export function isRmAdd(diff) {
 }
 
 export const quot = (x) => `"${x}"`
+
+export const pathGet = (x, path) => {
+  for (let key in path) {
+    if (!x) return void 0
+    x = x[key]
+  }
+}

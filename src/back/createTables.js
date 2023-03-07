@@ -1,49 +1,48 @@
-import g from './g.js'
-import { tn, isDoor, isPlainObject } from './utils.js'
+import g from '../g.js'
+import { tn, isDoor, isPlainObject } from '../utils.js'
 
 // todo: убрать fk door_prop_inArray(id)->book у случая { prop: [{ inArray: {} }] }
 // todo: для элементов массивов внутри массивов указывать x,y,z вместо i
 
-export function setDoorCreationQueries(name, desc) {
-  // const desc = g.desc[name] = descFunc()
-
+export function setDoorCreationQueries(name) {
+  const desc = (g.desc[name] = g.desc[name]())
   createTableFromObj([name], desc)
 
   function createTableFromObj(path, desc, isArrayChild) {
     const tableName = tn(...path)
-    let sql = `create table if not exists "${tableName}"(\n`
+    let query = `create table if not exists "${tableName}"(\n`
 
     for (let key in desc) {
       path.push(key)
-      sql += parseDescProp(desc[key], key, path, isArrayChild)
+      query += parseDescProp(desc[key], key, path, isArrayChild)
       path.pop()
     }
 
-    const hasPrimaryKey = sql.includes('primary key')
+    const hasPrimaryKey = query.includes('primary key')
     if (!hasPrimaryKey) {
       if (tableName !== name) {
         if (isArrayChild) {
-          sql += `${name} int,\n`
-          sql += `i int,\n`
-          sql += `primary key(${name}, i),\n`
+          query += `${name} int,\n`
+          query += `i int,\n`
+          query += `primary key(${name}, i),\n`
           // объектам внутри детей массивов ([{ deep: {} }])
           // присваивается 2 fk: (parent, i) - fk на бд массива
           // и здесь ещё дополнительно родитель массива: parent
           // TODO: убрать вторую связь, ибо она уже есть как parent-array-deep
-          addForeignKey(tn(...path), name, name, 'id')
         } else {
-          sql += `${name} int primary key,\n`
+          query += `${name} int primary key,\n`
         }
       } else {
-        sql += '"id" serial primary key,\n'
+        query += '"id" serial primary key,\n'
       }
     }
 
-    sql += 'created_at timestamp default current_timestamp,\n'
+    query += 'created_at timestamp default current_timestamp,\n'
+    query += 'updated_at timestamp,\n'
 
-    sql = sql.slice(0, sql.lastIndexOf(',')) + ');'
+    query = query.slice(0, query.lastIndexOf(',')) + ');'
 
-    g.queries.createTable.push(sql)
+    g.queries.createTable.push(query)
 
     return `references ${desc.name}(${
       'id' /* desc[g.foreignKeys[desc.name]] */
@@ -68,7 +67,6 @@ export function setDoorCreationQueries(name, desc) {
               getType(arrItem).slice(0, -1)
             )
           )
-          addForeignKey(arrayTableName, name, name, 'id')
           return ''
         } else if (isDoor(arrItem)) {
           const tableName = tn(...path)
@@ -78,8 +76,6 @@ export function setDoorCreationQueries(name, desc) {
             arrItem.name,
             tableName
           )
-          addForeignKey(tableName, arrItem.name, arrItem.name, 'id')
-          addForeignKey(tableName, name, name, 'id')
           g.queries.createTable.push(relationsTable)
           return ''
         } else if (isPlainObject(arrItem)) {
@@ -87,25 +83,14 @@ export function setDoorCreationQueries(name, desc) {
           return ''
         }
       }
-      let sql = ''
-      sql += `"${key}" ${getType(descProp[0])}`
-      sql += getConstraints(descProp)
-      sql += ',\n'
-      return sql
+      let query = ''
+      query += `"${key}" ${getType(descProp[0])}`
+      query += getConstraints(descProp)
+      query += ',\n'
+      return query
     } else if (isDoor(descProp)) {
-      const parentTableName = tn(...path.slice(0, -1))
-      addForeignKey(parentTableName, key, descProp.name, 'id')
       return `"${key}" int,\n`
     } else if (isPlainObject(descProp)) {
-      const parentTableName = tn(...path.slice(0, -1))
-      if (isParentArrayChild) {
-        addForeignKey(tn(...path), [name, 'i'], parentTableName, [name, 'i'])
-      } else {
-        if (parentTableName === name)
-          addForeignKey(tn(...path), name, parentTableName, 'id')
-        else addForeignKey(tn(...path), name, parentTableName, name)
-      }
-
       createTableFromObj(path, descProp, isParentArrayChild)
 
       return ''
@@ -117,18 +102,11 @@ export function isPrimitive(type) {
   return type === 1 || type === '' || type === true
 }
 
-function addForeignKey(tableName, key, parentTable, parentKey) {
-  const fk = `alter table "${tableName}" add foreign key("${key}") references "${parentTable}"("${parentKey}");`
-  if (!g.queries.foreignKeys[tableName]) g.queries.foreignKeys[tableName] = []
-  g.queries.foreignKeys[tableName].push(fk)
-  return fk
-}
-
 function getConstraints(descProp) {
-  let sql = ''
-  for (let i = 1; i < descProp.length; i++) sql += getConstraint(descProp[i])
-  if (!descProp.includes('required')) sql += `default ${descProp[0]}`
-  return sql
+  let query = ''
+  for (let i = 1; i < descProp.length; i++) query += getConstraint(descProp[i])
+  if (!descProp.includes('required')) query += `default ${descProp[0]}`
+  return query
 }
 
 function getType(type) {

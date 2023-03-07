@@ -1,10 +1,3 @@
-  act
-  operations
-  doors
-  values
-  space/line-break
-  bracket
-
 // любую запись можно однозначно идентифицировать
 // hasRemoteData превращаем в promise
 
@@ -32,31 +25,7 @@ favoriteBooksDo.get(`favoriteBooks.author = ${author}`, [0, 7])
  )
 `
 
-create table if not exists authors(
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name varchar(255) not null,
-  img varchar(255)
-)
-
-create table if not exists books(
-  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  name varchar(255),
-  createdUser foregin key references users(id)
-)
-
-create table if not exists booksAuthors(
-  author foregin key references authors(id),
-  book foregin key references books(id),
-  primary key(book, author)
-)
-
-create table if not exists favoriteBooks(
-  book foregin key references books(id),
-  user  foregin key references users(id),
-  primary key(user)
-)
-
-const parseDoor
+// const parseDoor
 
 function actToSql(str) {
   let operations = []

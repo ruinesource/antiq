@@ -11,9 +11,6 @@ front(async () => {
   в остальных списках использовать тупо весь список всегда
   сущности маппим, как и всегда по орм
 
-  WARNING! FULL-INTERACTION NEEDED
-  for clean understanding you need to download project on your computer
-
   react-query требует ожидать ответа сервера
   antiq позволяет продолжить взаимодействие с сайтом
   и откатывать неуспешные изменения сервера в фоне
@@ -33,15 +30,14 @@ front(async () => {
   изменений на бэке antiq при этом стандартно не происходит
   на фронте конечно остаются лакомости в виде loading и error, как и для остальных сущностей antiq
 
-// нужно получить массив последовательных операций и операций последущих над результатами предыдущих
-// операции: выполнение функции, аргументами могут быть члены массива
+  нужно получить массив последовательных операций и операций последущих над результатами предыдущих
+  операции: выполнение функции, аргументами могут быть члены массива
 
   складываем информацию по тому, какими будут первые экраны
-  элементы && рендерим для понимания что внутри
+  элементы && рендерим для понимания что внутри?
 
   массивы может нужно отфильтровать и найти что-то
-  favoriteBooks.get(userId, pagination, search)
-
+  favoriteBook.get(userId, pagination, search)
 */
 
 // req.c - cookie
@@ -73,36 +69,73 @@ front(async () => {
 // type, ...constraints
 // o omit
 
+// вопрос: как синхронизировать сущности из разных методов
+// в разных методах приходят разные поля
+// ответ: сохраняем
+
 // операторы:
 // includes find order desc name desc email
-// total каждого get, если есть пагинация
+// total каждого get, если возвращается массив
 // door
 // get put rm
-// >, <, =, !=, =>, <=, &, |, ~, !~
-// pagination filters search
+// >, =, !=, &, |, ~
+// any, all
+// in, not in - это то же, что any =, all !=
+
+// элемент таблицы со свойством больше свойства другой таблицы, like "book.name"...
+// (IN с операцией вместо строгого сравнения)
+
+// <=, <, =>
+// вместо BETWEEN используем "< AND >"
+// вместо IS NULL используем "= null"
+// filters pagination sort
 // stone - стор для фронтовых нужд
 
-// sql
+// в door.o() и door.s в случае других таблиц в запросе может содержать их поля
+// ошибка в случае дубля ключей
 
-export const users = door(
+// book.get({ name: or('oki', 'doki') })
+// book.get({ name: or(like('oki'), like(oki-doki)) })
+// book.get({ name: more(3) })
+// book.get({ name: not(more(3)) })
+// book.get({ name: not(like(3)) })
+// book.get([{ name: 'oki' }, { id: 'doki' }]) - or с разными свойствами
+
+// author.get({
+//   id: any(
+//     book.authors.s('id').innerGet({
+//       id: any(
+//         favoriteBooks.s('book').innerGet({ user: userId })
+//       )
+//     })
+//   )
+// })
+// author.get('(author a).id in (book.authors ba).get(ba.id )')
+
+// sql
+// sum не существует, или sql или считать через код
+// (надо оптимизацию, пиши sql)
+// sql статичны
+// если хочется обновлений, есть функция, в которой определяется при изменении каких полей каких таблиц(сущностей) обновляться
+
+export const userD = door(
   'user',
   () => ({
-    name: ['', 'primary'],
-    email: ['', 'primary'],
+    name: '',
+    email: '',
   }),
   {
-    // @form(type => type ? {
+    // @form({
     //   email: {
-    //     val: [],
+    //     validators: [],
     //   },
     //   name: [],
     //   nameRepeat: {
-    //     deps: ['name'],
+    //     validators: [required, { deps: ['name'], fn: (v, name) => '...' }],
     //   },
-    // } : { ...anotherForm })
+    // })
     register: async ({ name, email }) => {
-      // в k валидация и ошибки
-      const user = users.put({
+      const user = userD.put({
         name,
         email,
       })
@@ -124,21 +157,25 @@ export const users = door(
       front(() => Cookie.set('token', token))
     },
     // можно выполнить метод извне реакта
-    // и хук useData возьмёт значения из кэша, опираясь на аргументы
+    // и хук useApi возьмёт значения из кэша, опираясь на аргументы
+    // отключение от подписок можно делать с помощью disconnect
     login: async ({ email }) => {
-      // метод возвращает сущность с val, loading, error
-      // useApi(api.login) вызов api
-      // useDoor(api.currentUser, args)
+      // хук возвращает сущность с val, loading, error
+      // useApi(api.login, args, ?options) -> { v, loading, error }
+
+      // а массивы? сортировка/фильтрация/пагинация
+      // для них свои door, свои апи методы получения
+      // { pagination, filters }
 
       // все сущности, которые находятся в результатах get
       // записываются во фронтовые сторы, даже если они внутри back
-      // есть ещё safeGet, с ним фронт не засоряется
 
       // отслеживаем, какие сущности задействованы в каких методах
-      // выполняем их снова при изменении
+      // выполняем апи снова при их изменении (посчитать calculated свойства)
+      // ?выполняем методы на put/rm каждой дб, задействованой внутри апи
 
       const { token, user } = await back(async () => {
-        const user = await users.get({ email })
+        const user = await userD.get({ email })
         const { genToken } = require('./util')
 
         if (!user) throw 'no such user'
@@ -162,20 +199,20 @@ export const users = door(
 
         return {
           user: user,
-          token: genToken(users),
+          token: genToken(user),
         }
       })
     },
   }
 )
 
-export const books = door(
+export const bookD = door(
   'book',
   () => ({
     name: '',
     img: '',
-    authors: [authors],
-    createdUser: users,
+    authors: [authorD],
+    createdUser: userD,
     styles: [''],
     i18n: {
       ru: { desc: '' },
@@ -183,14 +220,14 @@ export const books = door(
     },
   }),
   {
-    put: [loggedOnly, (id, diff) => books.put({ id, ...diff })],
-    rm: [adminOnly, (id) => books.rm(id)],
+    put: [loggedOnly, (id, diff) => bookD.put({ id, ...diff })],
+    rm: [adminOnly, (id) => bookD.rm(id)],
     userCreatedBooks: ({ from, to }, req) =>
-      books.get({ createdUser: req.c.user }, [from, to]),
+      bookD.get({ createdUser: req.c.user }, [from, to]),
   }
 )
 
-export const authors = door(
+export const authorD = door(
   'author',
   () => ({
     name: '',
@@ -199,42 +236,64 @@ export const authors = door(
   {
     get: async (id) => {
       const [authorInst, booksPreview] = await Promise.all([
-        authors.get(id),
-        books('author', 'name').get(id),
+        authorD.get(id),
+        bookD.select('author', 'name').get(id),
       ])
       return { author: authorInst, booksPreview }
     },
     adminGet: [
       adminOnly,
       (id) => {
-        return authors.get(id)
+        return authorD.get(id)
       },
     ],
     allWithoutImg: () => {
-      return authors.o('img').get()
+      return authorD.o('img').get()
     },
     authorsOfFavoriteBooks: [
       loggedOnly,
-      (pagination) => {
-        return authors.get(
-          // cross-request
-          // у свойств-массивов есть функции js includes
-          `favoriteBooks.get(favoriteBooks.author.includes(authors.id)).length > 0`,
-          pagination
+      (pag) => {
+        return authorD.get(
+          // в js есть итерации с выполнением функции
+          // get и put
+          // в их аргументы передаются
+
+          // (author) => favoriteBook.get(
+          //   author.id
+          // )
+          // ?у массивов внутри объектов есть все методы массивов js?
+
+          // все сравнения, у которых аргумент переменная, зависимая от дб
+          // доступны только через act
+          // без него можно сравнивать только со строгими величинами
+
+          // cross-request (между разными дб) доступен только через act
+          // надо придумать способы преобразования форматов данных внутри (Number, String?)
+
+          `favoriteBook.get(
+            favoriteBook.authors.includes(authors.id)
+          ).length > 0`,
+          { pag }
         )
       },
     ],
   }
 )
 
-export const booksLists = door('booksLists', () => [books])
-
-export const favoriteBooks = door('favoriteBooks', () => [books], {
-  getFavoriteBooks: [
-    loggedOnly,
-    ({ filters, pagination }) => favoriteBooks.get(filters, pagination),
-  ],
-})
+export const favoriteBooksList = door(
+  'favoriteBooksList',
+  () => ({
+    user: userD,
+    book: bookD,
+  }),
+  {
+    getFavoriteBooks: [
+      loggedOnly,
+      ({ filters, pagination }) => favoriteBooksList.get(filters, pagination),
+    ],
+  },
+  { id: false }
+)
 
 function loggedOnly(method) {
   return function decoratedMethod(...args) {

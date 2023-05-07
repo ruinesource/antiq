@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import hotel from './hotel.js'
 import { open } from './front/ws.js'
 import { door } from './front/door.js'
+import g from './g.js'
 
 function App() {
   return <div className="App"></div>
@@ -10,7 +11,7 @@ function App() {
 
 const { bookD } = hotel({ door, open })
 
-bookD.one(17).then((res) => console.log(res))
+bookD.one(17).then((res) => console.log(res, g))
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(

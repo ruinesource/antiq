@@ -1,6 +1,6 @@
 import ws from 'ws'
 import http from 'http'
-import g, { e } from '../g.js'
+import g from '../g.js'
 
 const wss = new ws.Server({ noServer: true })
 
@@ -36,6 +36,8 @@ function onSocketConnect(ws) {
         ws.send(JSON.stringify({ i, v }))
         break
       }
+      default:
+        return null
     }
   })
 }

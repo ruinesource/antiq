@@ -1,9 +1,15 @@
-import g, { e } from '../g.js'
+import g, { openingPromiseResolver } from '../g.js'
 export const ws = new WebSocket('ws://localhost:5588')
 
 let sessionId
 
 // структура запроса
+// {
+//   t: 'get',
+//   a: [name, id],
+//   i: eventId,
+// }
+
 // структура ответа
 
 export function open() {
@@ -13,7 +19,7 @@ export function open() {
 
   ws.onopen = () => {
     g.opened = true
-    e.openingPromiseResolver()
+    openingPromiseResolver.exec()
   }
 
   ws.onmessage = (msg) => {

@@ -1,20 +1,33 @@
 import { ws } from './ws.js'
 import g from '../g.js'
-import { isPlainObject, isDoor, pathGet } from '../utils.js'
-
-// на get сохраняем результат в стор фронтенда
-
-// где-то здесь приходит дата, и isPlainObject на ней выполняется как true
-// а по факту это должна быть строка
-// надо проверить тип этой штуки и определить, как избежать ошибки
+import { isPlainObject, isDoor, normId } from '../utils.js'
 
 // t type
 // i eventId
 // a args
 // e err
+// c cookies
 
-export function get(name, id) {
-  const eventId = Math.random()
+// на одно свойство может потребоваться несколько сравнений (и/или)
+
+// структура запроса
+// { t: type, i: eventId, a: args, e: err }
+
+// структура ответа
+// {
+//   v: { door: { id: deepValuesWithoutOrms } },
+//   i: eventId
+// }
+
+export function get(name, id, options) {
+  // здесь если сущность уже есть на фронте со всеми полями
+  // возвращаем её Promise.resolve т.к. коннект через сокеты
+  // изменённые поля определяем на сервере
+  // при рассчётах внутри апи могут потребоваться поля, не возвращающиеся в компоненты
+  // такие поля влияют на ререндер
+  // поэтому для оптимизации рендера используем omit и select апи, а не хуки
+
+  const eventId = Date.now() //+ clientId
   ws.send(
     JSON.stringify({
       t: 'get',
@@ -34,7 +47,9 @@ export function get(name, id) {
     if (data.i === eventId) {
       if (data.e) reject(data.e)
       else {
-        resolve(getOne(name, data.v, id))
+        setValuesFromResponse(data.v)
+
+        resolve(getOne(name, id))
       }
     }
     delete g.listner[eventId]
@@ -43,21 +58,68 @@ export function get(name, id) {
   return promise
 }
 
-function getOne(name, v, id, parent) {
+// храним всё в нормализованном состоянии, с рекурсиями?
+// да, для ===
+// но это создаёт лишние ререндеры в случае изменений неиспользуемых детей
+// новое сообщение чата вызовет ререндер хедера
+// может имеет смысл разделить массивы и объекты?
+
+// холостой нормализации можно избежать, смотря на дату последнего изменения родителя и детей
+// если хоть один ребёнок изменился, выполняем нормализацию
+// на изменения всех сущностей записываем даты
+
+// а если изменился неиспользуемый ребёнок?
+// лишний ререндер
+
+function setValuesFromResponse(v) {
+  for (let name in v) {
+    for (let id in v[name]) {
+      const diff = v[name][id]
+      const itemCopy = (g.v[name][id] = { ...g.v[name][id] })
+
+      for (let key in diff) {
+        if (isPlainObject(diff[key])) {
+          itemCopy[key] = setSliceFromResponse(itemCopy[key], diff[key])
+        } else if (Array.isArray(diff[key])) {
+        } else {
+          itemCopy[key] = diff[key]
+        }
+      }
+    }
+  }
+}
+
+function setSliceFromResponse(currentSlice, diff) {
+  const copy = { ...currentSlice }
+
+  for (let key in diff) {
+    if (isPlainObject(diff[key])) {
+      copy[key] = setSliceFromResponse(copy[key], diff[key])
+    } else if (Array.isArray(diff[key])) {
+    } else {
+      copy[key] = diff[key]
+    }
+  }
+
+  return copy
+}
+
+function getOne(name, id, parent) {
+  if (parent === g.v[name][id]) return parent
+
+  const result = (g.v[name][id] = { ...g.v[name][id] })
+
   const desc = g.desc[name]
 
-  const res = g.v[name][id] || {}
-  const val = v[name]?.[id]
-  if (!val) return val
-  if (parent === res || !res) return res
-  for (let k in val) {
-    // if (SPEC_KEYS[k]) continue
-    res[k] = getDeep([name, k], val[k], v, desc[k], parent || res)
-  }
-  g.v[id] = res
+  // if (!val) return val
+  // for (let k in val) {
+  //   result[k] = getDeep([name, k], val[k], v, desc[k], parent || result)
+  // }
 
-  return res
+  return result
 }
+
+// function getDeep(name, id) {}
 
 function getDeep(path, val, v, desc, parent) {
   if (isDoor(desc)) {

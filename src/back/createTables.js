@@ -5,7 +5,8 @@ import { tn, isDoor, isPlainObject } from '../utils.js'
 // todo: для элементов массивов внутри массивов указывать x,y,z вместо i
 
 export function setDoorCreationQueries(name) {
-  const desc = (g.desc[name] = g.desc[name]())
+  const desc = g.desc[name]
+
   createTableFromObj([name], desc)
 
   function createTableFromObj(path, desc, isArrayChild) {

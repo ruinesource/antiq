@@ -1,7 +1,8 @@
-export const e = {
-  openingPromiseResolver: () => {},
+export const openingPromiseResolver = {
+  exec: () => {},
 }
 
+// normId нужен для массивов? да, потому что с сервера они приходят в нормализованном состоянии []
 const g = {
   orm: {}, // name: () => ...pathToChild[]
   desc: {}, // { name: desc },
@@ -12,7 +13,7 @@ const g = {
   v: {}, // normId: item
   listner: {},
   openingPromise: new Promise((r) => {
-    e.openingPromiseResolver = r
+    openingPromiseResolver.exec = r
   }),
   opened: false,
 }

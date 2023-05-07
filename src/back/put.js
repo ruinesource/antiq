@@ -47,7 +47,11 @@ async function setPutVars(
 ) {
   const sql = await db()
   const tableName = tn(...path)
+
+  // дата updated_at устанавливается раньше, чем объект устанавливается в таблицу
+  // перенести это в момент выполнения query
   const tableDiff = { updated_at: new Date().toISOString() }
+
   // query: { diff, key }
   // при выполнении этого квери следует подставить сгенеренный id в родительский diff
   const currentDelayedIds = []
@@ -76,6 +80,7 @@ async function setPutVars(
   }
   // сначала создаём query
   // затем добавляем в них id
+  // потому что в детских сущностях есть id родителя
   // как определить, в какой query какой id подставить?
   // по desc, path и id родовой сущности
 

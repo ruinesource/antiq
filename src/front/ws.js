@@ -12,7 +12,7 @@ let sessionId
 
 // структура ответа
 
-export function open() {
+export function openWs() {
   for (let key in g.desc) {
     g.desc[key] = g.desc[key]()
   }

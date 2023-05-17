@@ -7,7 +7,7 @@ import { db } from './src/back/db.js'
 
 hotel({
   door,
-  open: async () => {
+  onOpen: async () => {
     const sql = await db()
 
     for (let k in g.desc) {

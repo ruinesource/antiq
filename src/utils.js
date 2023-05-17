@@ -26,7 +26,10 @@ export function isRmAdd(diff) {
 
 export const quot = (x) => `"${x}"`
 
-export const normId = (door, x) => `${door}-${x}`
+export const normId = (door, x) => {
+  // ?oneOf
+  return `${door}-${x}`
+}
 
 export const pathGet = (x, path) => {
   for (let key in path) {

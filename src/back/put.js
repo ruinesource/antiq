@@ -10,6 +10,8 @@ import {
 import { db } from './db.js'
 import g from '../g.js'
 
+// таблица с графом экземпляр-экземпляр
+
 export async function put(name, diff) {
   const queries = []
   const diffs = {}

@@ -19,7 +19,17 @@ import { isPlainObject, isDoor, normId } from '../utils.js'
 //   i: eventId
 // }
 
-export function get(name, id, options) {
+export function get(name, id, opts) {
+  const eventId = g.currentEventId
+  g.currentEventId = null
+  const method = g.methods[eventId][g.methods[eventId].length - 1]
+
+  const currentItem = g.v[name][id]
+  if (currentItem) {
+    method.result = currentItem
+    return currentItem
+  }
+
   // здесь если сущность уже есть на фронте со всеми полями
   // возвращаем её Promise.resolve т.к. коннект через сокеты
   // изменённые поля определяем на сервере
@@ -27,7 +37,6 @@ export function get(name, id, options) {
   // такие поля влияют на ререндер
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
 
-  const eventId = Date.now() //+ clientId
   ws.send(
     JSON.stringify({
       t: 'get',
@@ -49,7 +58,10 @@ export function get(name, id, options) {
       else {
         setValuesFromResponse(data.v)
 
-        resolve(getOne(name, id))
+        const item = getOne(name, id)
+
+        method.result = item
+        resolve(item)
       }
     }
     delete g.listner[eventId]
@@ -67,9 +79,6 @@ export function get(name, id, options) {
 // холостой нормализации можно избежать, смотря на дату последнего изменения родителя и детей
 // если хоть один ребёнок изменился, выполняем нормализацию
 // на изменения всех сущностей записываем даты
-
-// а если изменился неиспользуемый ребёнок?
-// лишний ререндер
 
 function setValuesFromResponse(v) {
   for (let name in v) {

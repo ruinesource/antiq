@@ -12,10 +12,13 @@ const g = {
   door: {}, // name: door
   v: {}, // normId: item
   listner: {},
+  loaders: {}, // eventId | methodId: bool
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r
   }),
   opened: false,
+  methods: {},
+  currentEventId: null,
 }
 
 export default g

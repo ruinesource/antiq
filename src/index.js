@@ -11,7 +11,7 @@ function App() {
 
 const { bookD } = hotel({ door, onOpen: openWs })
 
-bookD.one(17).then((res) => console.log(res, g))
+bookD.one(17) //.then((res) => console.log(res, g))
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(

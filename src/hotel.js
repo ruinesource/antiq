@@ -29,8 +29,9 @@ export default function hotel({ door, onOpen }) {
     {
       // нужно записывать, из каких методов какие поля каких сущностей получаются
       // в зависимости от этого делать ререндеры
-      one: async ({ req, res }) => {
-        const book = await bookD.get(req.a)
+      one: async ({ req, res, api }) => {
+        const book = await api.get(req.a)
+
         return book
       },
 
@@ -48,8 +49,8 @@ export default function hotel({ door, onOpen }) {
 
       // на фронте put синхронен
       // но всё равно ставит лоадер на ивент
-      upd: async ({ req, res }) => {
-        const book = await bookD.put(req.a)
+      upd: async ({ req, res, api }) => {
+        const book = await api.put(req.a)
         return book
       },
     }

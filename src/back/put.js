@@ -336,6 +336,7 @@ async function execQuery(query, delayedIds) {
   const q = query.type(...query.args)
   const result = await sql(q)
   if (qDelayed)
+    // выполнить qDelayed?
     qDelayed.forEach(({ diff, key }) => {
       diff[key] = result.rows[0].id
     })

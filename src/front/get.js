@@ -15,20 +15,20 @@ import { isPlainObject, isDoor, normId } from '../utils.js'
 
 // структура ответа
 // {
-//   v: { door: { id: deepValuesWithoutOrms } },
+//   v: { door: { id: deepValuesWithoutDoors } },
 //   i: eventId
 // }
 
-export function get(name, id, opts) {
-  const eventId = g.currentEventId
+export async function get(name, id, opts) {
+  const { eventId } = opts
   g.currentEventId = null
-  const method = g.methods[eventId][g.methods[eventId].length - 1]
-
-  const currentItem = g.v[name][id]
-  if (currentItem) {
-    method.result = currentItem
-    return currentItem
-  }
+  //   const method = g.methods[eventId][g.methods[eventId].length - 1]
+  //
+  //   const currentItem = g.v[name][id]
+  //   if (currentItem) {
+  //     method.result = currentItem
+  //     return currentItem
+  //   }
 
   // здесь если сущность уже есть на фронте со всеми полями
   // возвращаем её Promise.resolve т.к. коннект через сокеты
@@ -36,6 +36,8 @@ export function get(name, id, opts) {
   // при рассчётах внутри апи могут потребоваться поля, не возвращающиеся в компоненты
   // такие поля влияют на ререндер
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
+
+  // 1. Получаем
 
   ws.send(
     JSON.stringify({
@@ -60,14 +62,22 @@ export function get(name, id, opts) {
 
         const item = getOne(name, id)
 
-        method.result = item
         resolve(item)
       }
     }
     delete g.listner[eventId]
   }
 
-  return promise
+  let result
+  try {
+    result = await promise
+  } catch (e) {
+    delete g.currentEventId
+  }
+
+  g.currentEventId = result
+
+  return result
 }
 
 // храним всё в нормализованном состоянии, с рекурсиями?

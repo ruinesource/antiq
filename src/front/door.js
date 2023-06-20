@@ -12,8 +12,7 @@ export function door(name, descFunc, api = {}, opts) {
   g.desc[name] = descFunc
 
   for (let k in api) {
-    door[k] = event(door, name, api[k])
-    door[k].name = `jim morrison`
+    door[k] = event(door, api[k])
   }
 
   return door
@@ -25,13 +24,29 @@ export function door(name, descFunc, api = {}, opts) {
 // напару с apiFnName он даёт полное представление о том, что за действие выполнено
 // ведь все аргументы отправляются с первым запросом фронта
 
-// !!! ИВЕНТ В ИВЕНТЕ В ИВЕНТЕ ЧТО С ИВЕНТ ИД !!!
+// в базу данных изменения коммитим
 
-function event(door, name, apiFn) {
+// door.event().method
+// если ивент вызвался внутри не через event, то создастся новый ивент
+// и руками отменять придётся два действия в случае ошибки одного из них
+
+function event(door, apiFn) {
   return async function event(args) {
-    const eventId = Math.random()
+    const eventId = g.currentEventId || Math.random()
+    // записывать выполненные методы нам нужно только на сервере
+    // потому что результат для фронта там уже может быть посчитан
     g.methods[eventId] = []
     g.loaders[eventId] = true
+
+    const api = {
+      get: (id) => get(door.name, id, { eventId }),
+      put: (diff) => put(door.name, diff, { eventId }),
+      shareEvent: (method) => {
+        g.currentEventId = eventId
+        method()
+        g.currentEventId = null
+      },
+    }
 
     if (!g.opened) await g.openingPromise
 
@@ -43,35 +58,51 @@ function event(door, name, apiFn) {
     // это если результат метода ивента можно записать
     // опираясь исключительно на фронтовый стор
 
-    function withEventId(name, method) {
-      return (...args) => {
-        g.currentEventId = eventId
-        return method(...args)
-      }
-    }
+    // door.api() useEvents(currentApi, door)
+    // поскольку внутри ивентов асинхронность
+    // нельзя гарантировать что после then эффекта
+    // выполнится сразу тело ивента, а не then другого эффекта
 
-    // метод может не отправлять запрос на сервер
-    // doorApi отправляет запрос всегда
-    // функция back тоже отправляет запрос, потому что может потребоваться её результат на фронте
-    // бэку нужно знать, о каком ивенте речь
+    // back front get put rm sql
+
+    // мы копим на фронте лоадинги и на сервере отвечаем пачкой
+    // стимул ответа - востребованность информации на фронте
+    // для продолжения выполнения ивента (задержка изменения интерфейса после действия пользователя)
+    // точки отправки информации с сервера на фронт - не подключенный get и back
+    // либо фронт внутри ивента доходит до точки неизвестности
+    // и ожидает ответ сервера со всей информацией, необходимой для дальнейшего выполнения
+    // ...либо ошибку
+
+    // на фронте есть симулированный мир будущего
+    // в этом мире есть симулированные id для put и результаты rm
+    // он возвращается из хуков для показа пользователю
+    // он используется внутри функций ивентов
+    // реальный мир так же доступен
+    // симулированный мир становится реальным после подтверждения сервера
+    // в случае ошибки пользователь может попробовать повторить действие
+
+    // put на свой success получает id
+    // бэку нужно знать, о каком ивенте речь, он отправляется в каждом запросе
+    // так же отправляется индекс метода, и если он в ивенте последний - везде фаза успеха и очистки
     // апи внутри ивента выполняется в строго определённом порядке
-    // в зависимости от аргументов
-    // но всегда одинаково на фронтенде и сервере
+    // если не хочешь загружать фронт лишней работой, ты можешь перенести расчёты внутрь back
+    // в зависимости от аргументов делать пересчёты
 
-    door.get = withEventId('get', (id) => get(name, id))
-    door.put = withEventId('put', (diff) => put(name, diff))
+    // 2 варианта ликвидации эффектов для передачи eventId:
+    // withEventId(event)
+    // и await effect(oki)
+    // effect позволяет не использовать door.api()
+    // но можно ошибиться, забыв этот effect
+    // точно так же можно ошибиться, не заюзав withEventId внутри door
 
     let result
     try {
-      g.currentEventId = eventId
-      result = await apiFn({ a: args })
+      result = await apiFn({ req: { a: args }, api })
     } catch (e) {
       console.log(e)
     }
 
     g.loaders[eventId] = false
-    delete door.get
-    delete door.put
     delete g.methods[eventId]
 
     return result

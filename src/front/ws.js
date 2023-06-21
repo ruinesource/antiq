@@ -22,7 +22,7 @@ export function openWs() {
     openingPromiseResolver.exec()
   }
 
-  ws.onmessage = (msg) => {
+  ws.onmessage = async (msg) => {
     const data = JSON.parse(msg.data)
 
     if (data.t === 'open') {
@@ -31,7 +31,8 @@ export function openWs() {
     }
 
     if (g.listner[data.i]) {
-      g.listner[data.i](data)
+      await g.listner[data.i](data)
+      delete g.listner[data.i]
     }
   }
 
@@ -41,4 +42,27 @@ export function openWs() {
   }
 
   return doors
+}
+
+export function sendEvent({ event, onSuccess }) {
+  ws.send(JSON.stringify(event))
+
+  let resolve
+  let reject
+  const promise = new Promise((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+
+  g.listner[event.i] = async (data) => {
+    if (data.e) {
+      reject(data.e)
+    } else {
+      const result = await onSuccess(data)
+      resolve(result)
+    }
+    delete g.listner[event.i]
+  }
+
+  return promise
 }

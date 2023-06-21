@@ -1,4 +1,4 @@
-import { ws } from './ws.js'
+import { sendEvent } from './ws.js'
 import g from '../g.js'
 import { isPlainObject, isDoor, normId } from '../utils.js'
 
@@ -10,8 +10,8 @@ import { isPlainObject, isDoor, normId } from '../utils.js'
 
 // на одно свойство может потребоваться несколько сравнений (и/или)
 
-// структура запроса
-// { t: type, i: eventId, a: args, e: err }
+// структура экшна
+// { t: type, i: eventId, a: args }
 
 // структура ответа
 // {
@@ -21,7 +21,6 @@ import { isPlainObject, isDoor, normId } from '../utils.js'
 
 export async function get(name, id, opts) {
   const { eventId } = opts
-  g.currentEventId = null
   //   const method = g.methods[eventId][g.methods[eventId].length - 1]
   //
   //   const currentItem = g.v[name][id]
@@ -37,58 +36,24 @@ export async function get(name, id, opts) {
   // такие поля влияют на ререндер
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
 
-  // 1. Получаем
-
-  ws.send(
-    JSON.stringify({
+  const result = await sendEvent({
+    event: {
       t: 'get',
       a: [name, id],
       i: eventId,
-    })
-  )
+    },
+    onSuccess: (data) => {
+      setValuesFromResponse(data.v)
 
-  let resolve
-  let reject
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
+      return getOne(name, id)
+    },
   })
-
-  g.listner[eventId] = (data) => {
-    if (data.i === eventId) {
-      if (data.e) reject(data.e)
-      else {
-        setValuesFromResponse(data.v)
-
-        const item = getOne(name, id)
-
-        resolve(item)
-      }
-    }
-    delete g.listner[eventId]
-  }
-
-  let result
-  try {
-    result = await promise
-  } catch (e) {
-    delete g.currentEventId
-  }
-
-  g.currentEventId = result
 
   return result
 }
 
 // храним всё в нормализованном состоянии, с рекурсиями?
-// да, для ===
-// но это создаёт лишние ререндеры в случае изменений неиспользуемых детей
-// новое сообщение чата вызовет ререндер хедера
-// может имеет смысл разделить массивы и объекты?
-
-// холостой нормализации можно избежать, смотря на дату последнего изменения родителя и детей
-// если хоть один ребёнок изменился, выполняем нормализацию
-// на изменения всех сущностей записываем даты
+// нет, иначе лишние ререндеры
 
 function setValuesFromResponse(v) {
   for (let name in v) {

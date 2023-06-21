@@ -239,7 +239,13 @@ export const userD = door(
     // отключение от подписок можно делать с помощью disconnect
     login: async ({ email }) => {
       // хук возвращает сущность с val, loading, error
-      // useApi(api.login, args, ?opts) -> { v, loading, error, total }
+      // useData(door.login, args, ?opts) -> { v, success, loading, error, total }
+
+      // useApi(door.login) -> { call, success, loading, error }
+
+      // если внутри метода есть put/rm, он не подключается к сокету
+      // если только get, то по умолчанию метод выполняем всегда
+      // и можем выставить флаг, что пересчитывать его не нужно
 
       // а массивы? сортировка/фильтрация/пагинация
       // для них свои свои апи методы получения

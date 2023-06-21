@@ -29,9 +29,10 @@ export default function hotel({ door, onOpen }) {
     {
       // нужно записывать, из каких методов какие поля каких сущностей получаются
       // в зависимости от этого делать ререндеры
+      // useApi(book.one, 17)
+
       one: async ({ req, res, api }) => {
         const book = await api.get(req.a)
-
         return book
       },
 

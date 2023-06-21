@@ -1,4 +1,4 @@
-import { ws } from './ws.js'
+import { sendEvent } from './ws.js'
 import { normId } from '../utils.js'
 import g from '../g.js'
 
@@ -27,11 +27,15 @@ import g from '../g.js'
 // на put мы смотрим связанные сущности
 // в симулированном мире, к которому подключены хуки, их изменяем
 
-export function put(name, diff, opts) {
+export async function put(name, diff, opts) {
   const { eventId } = opts
-  g.currentEventId = null
 
   const nId = normId(name, diff.id)
+
+  const result = await sendEvent({
+    event: {},
+    onSuccess() {},
+  })
 
   // если сущность новая id нет, генерируем его на фронте
   // после подставляем полученный с бэка и везде замещаем

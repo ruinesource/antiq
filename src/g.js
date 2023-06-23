@@ -3,6 +3,7 @@ export const openingPromiseResolver = {
 }
 
 // normId нужен для массивов? да, потому что с сервера они приходят в нормализованном состоянии []
+// в каком виде нужен граф?
 const g = {
   orm: {}, // name: () => ...pathToChild[]
   desc: {}, // { name: desc },

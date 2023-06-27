@@ -33,6 +33,7 @@ export default function hotel({ door, onOpen }) {
 
       one: async ({ req, res, api }) => {
         const book = await api.get(req.a)
+        // можем ли мы в асинхронный поток перед конкретным событием задать переменную?
         return book
       },
 
@@ -52,7 +53,23 @@ export default function hotel({ door, onOpen }) {
       // но всё равно ставит лоадер на ивент
       upd: async ({ req, res, api }) => {
         const book = await api.put(req.a)
+
         return book
+      },
+
+      authorsOfFavoriteBooks: async (pag, userId) => {
+        // return authorD.get({
+        //   id: await oneOf(
+        //     await bookD.s('id').get({
+        //       id: await oneOf(
+        //         await favoriteBooksD.s('id').get({
+        //           user: userId,
+        //         })
+        //       ),
+        //     })
+        //   ),
+        // },
+        // { pag })
       },
     }
   )

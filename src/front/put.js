@@ -34,6 +34,10 @@ import g from '../g.js'
 // сервер смотрит, нужно ли уведомлять
 // фронт смотрит, может ли показать изменения без отправки на сервер
 
+// .get() -> merge(value, updates)
+
+// addedRelations, removedRelations
+
 export async function put(name, diff, opts) {
   const { eventId } = opts
 
@@ -43,13 +47,30 @@ export async function put(name, diff, opts) {
   // идём по diff и меняем фронтовый стор
   // смотрим desc и перезаписываем relations
 
-  const nId = normId(name, diff.id)
+  const nId = normId(name, id)
+
+  const prevVal = g.values[normId]
 
   const result = await sendEvent({
-    event: {},
+    event: {
+      t: 'put',
+      a: [name, diff],
+      i: eventId,
+    },
     onSuccess() {},
   })
 
   // если сущность новая id нет, генерируем его на фронте
   // после подставляем полученный с бэка и везде замещаем
+
+  return result
 }
+
+// записать diff
+// пройтись по desc в поисках новых отношений
+function applyRelations(desc, inst, diff, stack) {
+  if (!g.updates[diff.id]) g.updates[diff.id] = [{}]
+  else g.updates[diff.id].push({})
+}
+
+function merge(desc, diff) {}

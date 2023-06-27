@@ -11,7 +11,8 @@ const g = {
     createTable: [],
   },
   door: {}, // name: door
-  v: {}, // normId: item
+  values: {}, // normId: item
+  updates: {}, // normId: [diff, diff...]
   listner: {},
   loaders: {}, // eventId | methodId: bool
   openingPromise: new Promise((r) => {

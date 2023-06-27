@@ -8,7 +8,7 @@ export function door(name, descFunc, api = {}, opts) {
   }
 
   g.door[name] = door
-  g.v[name] = {}
+  g.values[name] = {}
   g.desc[name] = descFunc
 
   for (let k in api) {

@@ -23,7 +23,7 @@ export async function get(name, id, opts) {
   const { eventId } = opts
   //   const method = g.methods[eventId][g.methods[eventId].length - 1]
   //
-  //   const currentItem = g.v[name][id]
+  //   const currentItem = g.values[name][id]
   //   if (currentItem) {
   //     method.result = currentItem
   //     return currentItem
@@ -59,7 +59,7 @@ function setValuesFromResponse(v) {
   for (let name in v) {
     for (let id in v[name]) {
       const diff = v[name][id]
-      const itemCopy = (g.v[name][id] = { ...g.v[name][id] })
+      const itemCopy = (g.values[name][id] = { ...g.values[name][id] })
 
       for (let key in diff) {
         if (isPlainObject(diff[key])) {
@@ -89,9 +89,9 @@ function setSliceFromResponse(currentSlice, diff) {
 }
 
 function getOne(name, id, parent) {
-  if (parent === g.v[name][id]) return parent
+  if (parent === g.values[name][id]) return parent
 
-  const result = (g.v[name][id] = { ...g.v[name][id] })
+  const result = (g.values[name][id] = { ...g.values[name][id] })
 
   const desc = g.desc[name]
 

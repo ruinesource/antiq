@@ -114,6 +114,7 @@ front(async () => {
 // book.get({ name: more(3) })
 // book.get({ name: not(more(3)) })
 // book.get({ name: not(like(3)) })
+// book.get({ name: and(not(like(3)), like(4)) })
 // book.get([{ name: 'oki' }, { id: 'doki' }]) - or с разными свойствами
 
 // author.get({

@@ -26,6 +26,9 @@ export default function hotel({ door, onOpen }) {
         },
       },
     }),
+    // перед первым запросом на сервер нет никакой асинхронности
+    // всё это можем записать в хук на следующем уровне
+
     {
       // нужно записывать, из каких методов какие поля каких сущностей получаются
       // в зависимости от этого делать ререндеры
@@ -57,19 +60,31 @@ export default function hotel({ door, onOpen }) {
         return book
       },
 
+      // если есть асинхронность (недостаток данных на фронте)
+      // put, rm, первые get
+      // она есть только один раз за метод
+      // запоминаем get-запросы каждой сессии в методах для useData
+      // то при изменении связанных get выполняем метод целиком на сервере
+      // то есть по изменению условия get определяем, выполняем ли подключенный метод
+      // отправляем результат на фронт
       authorsOfFavoriteBooks: async (pag, userId) => {
-        // return authorD.get({
-        //   id: await oneOf(
-        //     await bookD.s('id').get({
-        //       id: await oneOf(
-        //         await favoriteBooksD.s('id').get({
-        //           user: userId,
-        //         })
-        //       ),
-        //     })
-        //   ),
-        // },
-        // { pag })
+        // здесь в первый раз отправляется запрос на сервер
+        // в нём authorsOfFavoriteBooks(pag, userId)
+        // считаются все величины
+        const favoriteBooksIds = await favoriteBooksD.s('id').get({
+          user: userId,
+        })
+
+        const favoriteBooksAuthorsIds = await booksAuthorsD.s('author').get({
+          id: await any(favoriteBooksIds),
+        })
+
+        return authorD.get(
+          {
+            id: await any(favoriteBooksAuthorsIds),
+          },
+          { pag }
+        )
       },
     }
   )

@@ -29,20 +29,6 @@ export default function hotel({ door, onOpen }) {
     // перед первым запросом на сервер нет никакой асинхронности
     // всё это можем записать в хук на следующем уровне
 
-    // если из микро задачи появляется микро и макро задача, сначала выполнится микро
-
-    // function a() {
-    //   queueMicrotask(() => {
-    //     console.log('1')
-    //     queueMicrotask(() => {
-    //       console.log('3')
-    //     })
-    //   })
-    //   queueMicrotask(() => {
-    //     console.log('2')
-    //   })
-    // }
-
     {
       // нужно записывать, из каких методов какие поля каких сущностей получаются
       // в зависимости от этого делать ререндеры
@@ -101,6 +87,16 @@ export default function hotel({ door, onOpen }) {
 
         return book
       },
+
+      // !!!!!!!! в какой форме сохраняем запросы !!!!!!!!
+      // фронт
+      // 1. методы из useData с аргументами (methodName: { jsonArgs: result })
+      // 2. get-запросы door (s/o-поля, аргументы) { door-method: { sortedQueryFields: { jsonArgs: result } } }
+      // 3. если в get-аргументе primaryKey, то сущность с полями можем посмотреть в сторе
+      // 4. во всех массивах только id
+      // 5. граф normId: { methodName: { jsonArgs: true } }
+      // 6. граф normId: { parentId: { pathsToChild: true } }
+      // 7. граф normId: { childNormId: true }
 
       // если есть асинхронность (недостаток данных на фронте)
       // put, rm, первые get

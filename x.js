@@ -36,4 +36,3 @@ where author.id = any(
     where favorite_book.user = *user*
   )
 )
-

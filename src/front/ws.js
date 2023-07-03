@@ -59,7 +59,10 @@ export function sendEvent({ event, onSuccess }) {
       reject(data.e)
     } else {
       const result = await onSuccess(data)
+
       g.currentEventId = event.i
+      // set methods
+
       resolve(result)
     }
     delete g.listner[event.i]

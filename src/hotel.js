@@ -105,6 +105,8 @@ export default function hotel({ door, onOpen }) {
       // то при изменении связанных get выполняем метод целиком на сервере
       // то есть по изменению условия get определяем, выполняем ли подключенный метод
       // отправляем результат на фронт
+
+      // if arg func cookie and rest
       authorsOfFavoriteBooks: async (pag, userId) => {
         // здесь в первый раз отправляется запрос на сервер
         // в нём authorsOfFavoriteBooks(pag, userId)

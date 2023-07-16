@@ -49,6 +49,8 @@ export default function hotel({ door, onOpen }) {
         // 3. с сервера приходят все данные метода, он выполняется на фронте ?синхронно
 
         const book = await bookD.get(id)
+
+        console.log(book)
         // можем ли мы в асинхронный поток перед конкретным событием задать переменную?
         // обернуть выполнение кода события, поставив микротаск в очередь перед микротаском события
 
@@ -81,13 +83,14 @@ export default function hotel({ door, onOpen }) {
       // у всех остальных get-запросов аргументы сохраняем и по ним ориентируемся
       // (todo) ужесточение фильтров фронтовыми силами, если есть все элементы
 
-      // 1. методы из useData с аргументами (methodName: { jsonArgs: result })
+      // 1. методы из data с аргументами (methodName: { jsonArgs: result })
       // 2. get-запросы door (s/o-поля, аргументы) { door-method: { sortedQueryFields: { jsonArgs: result } } }
       // 3. если в get-аргументе primaryKey, то сущность с полями можем посмотреть в сторе
       // 4. во всех массивах только id
       // 5. граф normId: { methodName: { jsonArgs: true } }
       // 6. граф normId: { parentId: { pathsToChild: true } }
       // 7. граф normId: { childNormId: true }
+      // 8. граф { normId: { door-method: { sortedQueryFields: true } } } - в каких методах закешированы сущности
 
       // если есть асинхронность (недостаток данных на фронте)
       // put, rm, первые get

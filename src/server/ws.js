@@ -33,7 +33,7 @@ function onSocketConnect(ws) {
 
     // здесь нужно получить:
     // 1. результаты всех get внутри
-    // 2. id всех сущностей из put)
+    // 2. id всех сущностей из put
 
     g.currentEvent = currentEvent
     const values = await g.door[doorName][method](...args)

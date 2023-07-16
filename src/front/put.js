@@ -38,6 +38,12 @@ import g from '../g.js'
 
 // addedRelations, removedRelations
 
+// сущности все мутируются из put и создаются только один раз
+// но мутировать их вручную бессмысленно
+// к системе привязан сам метод put
+// и в массивах хранятся в своими экземплярами
+// а не айди
+
 export async function put(name, diff, opts) {
   const { currentEvent } = g
 

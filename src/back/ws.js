@@ -28,16 +28,26 @@ function onSocketConnect(ws) {
   )
 
   ws.on('message', async function (message) {
-    const { t, e, a, i } = JSON.parse(message)
-    const [name, id] = a
-    switch (t) {
-      case 'get': {
-        const v = await g.door[name].get(id)
-        ws.send(JSON.stringify({ i, v }))
-        break
-      }
-      default:
-        return null
-    }
+    const currentEvent = JSON.parse(message)
+    const { eventId, doorName, method, args } = currentEvent
+
+    // здесь нужно получить:
+    // 1. результаты всех get внутри
+    // 2. id всех сущностей из put)
+
+    g.currentEvent = currentEvent
+    const values = await g.door[doorName][method](...args)
+
+    ws.send(JSON.stringify(values))
+
+    // switch (t) {
+    //   case 'get': {
+    //     const v = await g.door[name].get(id)
+    //     ws.send(JSON.stringify({ i, v }))
+    //     break
+    //   }
+    //   default:
+    //     return null
+    // }
   })
 }

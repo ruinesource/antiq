@@ -2,6 +2,8 @@ import g from '../g.js'
 import { get } from './get.js'
 import { put } from './put.js'
 
+// ивент и экшн
+
 export function door(name, descFunc, getters = {}, setters = {}, opts) {
   const door = {
     name,
@@ -12,12 +14,15 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
   g.desc[name] = descFunc
 
   for (let k in getters) {
-    door[k] = event(door, getters[k])
+    door[k] = event(door, getters[k], k)
   }
 
   for (let k in setters) {
-    door[k] = event(door, setters[k])
+    door[k] = event(door, setters[k], k)
   }
+
+  door.get = (id) => get(name, id)
+  door.put = (diff) => put(name, diff)
 
   return door
 }
@@ -34,8 +39,8 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
 // если ивент вызвался внутри не через event, то создастся новый ивент
 // и руками отменять придётся два действия в случае ошибки одного из них
 
-function event(door, apiFn) {
-  return async function event(args) {
+function event(door, apiFn, apiName) {
+  return async function event(...args) {
     // 1. делаем массив операций ивента
     // 2. при первой нехватке данных или изменении бд отправляем запрос
     // 3. в ответе получаем либо ошибку, либо результат всех операций ивента
@@ -46,21 +51,15 @@ function event(door, apiFn) {
     // самим экшнам не нужны id, они выполняются по порядку
     // нужен флаг, пришли ли
 
-    const eventId = g.currentEventId || Math.random()
-
-    g.methods[eventId] = [] // [{ type: 'get', args: [] }]
-    g.loaders[eventId] = true
-
-    const api = {
-      get: (id) => get(door.name, id, { eventId }),
-      // put удалить в getters
-      put: (diff) => put(door.name, diff, { eventId }),
-      shareEvent: (method) => {
-        g.currentEventId = eventId
-        method()
-        g.currentEventId = null
-      },
+    const event = {
+      id: g.currentEvent?.id || Math.random(),
+      doorName: door.name,
+      method: apiName,
+      args,
     }
+
+    g.methods[event.id] = [] // [{ type: 'get', args: [] }]
+    g.loaders[event.id] = true
 
     if (!g.opened) await g.openingPromise
 
@@ -109,15 +108,37 @@ function event(door, apiFn) {
     // но можно ошибиться, забыв этот effect
     // точно так же можно ошибиться, не заюзав withEventId внутри door
 
+    // зачем выполнять метод на фронте, если на сервере всё посчитано?
+    // потому что его выполнение уже запущено до нехватки данных
+
+    // ответ { methodResult, eventsResults }
+
+    function setActionsWithEventToDoor() {
+      door.get = withSettedEvent((id) => get(door.name, id))
+      door.put = withSettedEvent((diff) => put(door.name, diff))
+    }
+
+    function withSettedEvent(method) {
+      return async (...args) => {
+        g.currentEvent = event
+        const result = await method()
+
+        // по какой-то причине
+        // синхронная установка переменных не даёт нужного результата
+        // queueMicrotask делает её сразу после await при вызове
+        queueMicrotask(setActionsWithEventToDoor)
+        return result
+      }
+    }
+
+    setActionsWithEventToDoor()
+
     let result
     try {
-      result = await apiFn({ req: { a: args }, api })
+      result = await apiFn({ req: { a: args } })
     } catch (e) {
       console.log(e)
     }
-
-    g.loaders[eventId] = false
-    delete g.methods[eventId]
 
     return result
   }

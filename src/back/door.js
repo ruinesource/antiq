@@ -19,6 +19,10 @@ export function door(name, descFunc, api = {}, options) {
   }
   g.door[name] = door
 
+  for (let k in api) {
+    door[k] = api[k]
+  }
+
   // отправлять данные в формате { door: { id: {...} } }
   // for (let key in api) {
   //   app.post(`/${name}-${key}`, async (req, res) => {

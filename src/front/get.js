@@ -2,11 +2,12 @@ import { sendEvent } from './ws.js'
 import g from '../g.js'
 import { isPlainObject, isDoor, normId } from '../utils.js'
 
-// t type
 // i eventId
-// a args
-// e err
-// c cookies
+// d door
+// e eventName
+// a eventArgs
+// err err
+// c cookies...
 
 // на одно свойство может потребоваться несколько сравнений (и/или)
 
@@ -19,8 +20,13 @@ import { isPlainObject, isDoor, normId } from '../utils.js'
 //   i: eventId
 // }
 
+// на сервере мы выполняем метод
+// запускаем выполнение и чё
+// смотрим, какие ивенты задействованы (может быть асинхронное)
+// результаты записываем в eventId: [updates]
+
 export async function get(name, id, opts) {
-  const { eventId } = opts
+  const { currentEvent } = g
   //   const method = g.methods[eventId][g.methods[eventId].length - 1]
   //
   //   const currentItem = g.values[name][id]
@@ -36,11 +42,15 @@ export async function get(name, id, opts) {
   // такие поля влияют на ререндер
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
 
+  const nId = normId({ name }, id)
+  if (g.values[nId]) return g.values[nId]
+
   return sendEvent({
     event: {
-      t: 'get',
-      a: [name, id],
-      i: eventId,
+      eventId: g.currentEvent.id,
+      doorName: g.currentEvent.doorName,
+      method: g.currentEvent.method,
+      args: g.currentEvent.args,
     },
     onSuccess: (data) => {
       setValuesFromResponse(data.v)
@@ -53,10 +63,10 @@ export async function get(name, id, opts) {
 // храним всё в нормализованном состоянии, с рекурсиями?
 // нет, иначе лишние ререндеры
 
-function setValuesFromResponse(v) {
-  for (let name in v) {
-    for (let id in v[name]) {
-      const diff = v[name][id]
+function setValuesFromResponse(values) {
+  for (let name in values) {
+    for (let id in values[name]) {
+      const diff = values[name][id]
       const itemCopy = (g.values[name][id] = { ...g.values[name][id] })
 
       for (let key in diff) {

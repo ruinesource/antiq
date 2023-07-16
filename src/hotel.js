@@ -34,7 +34,7 @@ export default function hotel({ door, onOpen }) {
       // в зависимости от этого делать ререндеры
       // useApi(book.one, 17)
 
-      one: async ({ req, res, api }) => {
+      one: async (id) => {
         // нужно сделать так, что каждый раз когда выполняется функция внутри метода
         // все асинхронное на фронте должно быть записано вовне метода в хуки
         // и передаваться через аргументы
@@ -48,7 +48,7 @@ export default function hotel({ door, onOpen }) {
         // 2. первое асинхронное апи знает эти переменные и отправляет их на сервер
         // 3. с сервера приходят все данные метода, он выполняется на фронте ?синхронно
 
-        const book = await api.get(req.a)
+        const book = await bookD.get(id)
         // можем ли мы в асинхронный поток перед конкретным событием задать переменную?
         // обернуть выполнение кода события, поставив микротаск в очередь перед микротаском события
 
@@ -79,7 +79,7 @@ export default function hotel({ door, onOpen }) {
 
       // get-запросы по primary key не кэшируем отдельно, смотрим только наличие всех полей
       // у всех остальных get-запросов аргументы сохраняем и по ним ориентируемся
-      // (todo) делать ужесточение фильтров фронтовыми силами, если есть все элементы
+      // (todo) ужесточение фильтров фронтовыми силами, если есть все элементы
 
       // 1. методы из useData с аргументами (methodName: { jsonArgs: result })
       // 2. get-запросы door (s/o-поля, аргументы) { door-method: { sortedQueryFields: { jsonArgs: result } } }
@@ -104,16 +104,15 @@ export default function hotel({ door, onOpen }) {
         // здесь в первый раз отправляется запрос на сервер
         // в нём authorsOfFavoriteBooks(pag, userId)
         // считаются все величины
-        const favoriteBooksIds = await favoriteBooksD.s('id').get({
+        /* const favoriteBooksIds = await favoriteBooksD.s('id').get({
           user: userId,
-        })
-
+        }) */
         // если где-то уже получались favoriteBooks
         // то может получались и booksAuthors с ними
         // и это действие можем выполнить тоже синхронно
         // а может и асинхронно - если не получались
         // поэтому нужен await
-        const favoriteBooksAuthorsIds = await booksAuthorsD.s('author').get({
+        /* const favoriteBooksAuthorsIds = await booksAuthorsD.s('author').get({
           id: any(favoriteBooksIds),
         })
 
@@ -122,7 +121,7 @@ export default function hotel({ door, onOpen }) {
             id: any(favoriteBooksAuthorsIds),
           },
           { pag }
-        )
+        ) */
       },
     },
     {
@@ -140,8 +139,8 @@ export default function hotel({ door, onOpen }) {
 
       // на фронте put синхронен
       // но всё равно ставит лоадер на ивент
-      upd: async ({ req, res, api }) => {
-        const book = await api.put(req.a)
+      upd: async ({ req, res }) => {
+        const book = await bookD.put(req.a)
 
         return book
       },

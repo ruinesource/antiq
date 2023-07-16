@@ -20,6 +20,12 @@ const g = {
   }),
   opened: false,
   methods: {},
+  currentEvent: {
+    id: null,
+    doorName: '',
+    method: '',
+    args: [],
+  },
   currentEventId: null,
 }
 

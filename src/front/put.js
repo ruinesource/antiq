@@ -39,7 +39,7 @@ import g from '../g.js'
 // addedRelations, removedRelations
 
 export async function put(name, diff, opts) {
-  const { eventId } = opts
+  const { currentEvent } = g
 
   let id = diff.id || Math.random()
   const hasNoId = !diff.id
@@ -55,7 +55,7 @@ export async function put(name, diff, opts) {
     event: {
       t: 'put',
       a: [name, diff],
-      i: eventId,
+      i: currentEvent.id,
     },
     onSuccess() {},
   })

@@ -378,7 +378,7 @@ export const favoriteBooksList = door(
       ({ filters, pagination }) => favoriteBooksList.get(filters, pagination),
     ],
   },
-  { id: false }
+  { primaryKey: ['user', 'book'] }
 )
 
 function loggedOnly(method) {

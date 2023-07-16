@@ -6,8 +6,8 @@ import { door } from './front/door.js'
 import g from './g.js'
 
 function App() {
-  useD(bookD.one, 17)
-  useA(bookD.one)
+  // useD(bookD.one, 17)
+  // useA(bookD.one)
 
   return <div className="App"></div>
 }
@@ -45,17 +45,17 @@ const { bookD } = hotel({ door, onOpen: openWs })
 
 bookD.one(17) //.then((res) => console.log(res, g))
 
-bookD.upd({
-  name: 'oki',
-  team_member: null,
-  authors: [],
-  deep: {
-    ea: 'oki',
-    very: {
-      ea: 'doki',
-    },
-  },
-})
+// bookD.upd({
+//   name: 'oki',
+//   team_member: null,
+//   authors: [],
+//   deep: {
+//     ea: 'oki',
+//     very: {
+//       ea: 'doki',
+//     },
+//   },
+// })
 
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(

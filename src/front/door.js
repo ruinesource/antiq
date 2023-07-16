@@ -2,7 +2,7 @@ import g from '../g.js'
 import { get } from './get.js'
 import { put } from './put.js'
 
-export function door(name, descFunc, api = {}, opts) {
+export function door(name, descFunc, getters = {}, setters = {}, opts) {
   const door = {
     name,
   }
@@ -11,8 +11,12 @@ export function door(name, descFunc, api = {}, opts) {
   g.values[name] = {}
   g.desc[name] = descFunc
 
-  for (let k in api) {
-    door[k] = event(door, api[k])
+  for (let k in getters) {
+    door[k] = event(door, getters[k])
+  }
+
+  for (let k in setters) {
+    door[k] = event(door, setters[k])
   }
 
   return door
@@ -49,6 +53,7 @@ function event(door, apiFn) {
 
     const api = {
       get: (id) => get(door.name, id, { eventId }),
+      // put удалить в getters
       put: (diff) => put(door.name, diff, { eventId }),
       shareEvent: (method) => {
         g.currentEventId = eventId

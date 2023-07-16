@@ -48,3 +48,19 @@ export const withEventId = (method, eventId) => {
     return result
   }
 }
+
+export function valToKey(val) {
+  if (Array.isArray(val)) return JSON.stringify(val.map(valToKey))
+
+  if (isPlainObject(val)) {
+    let result = {}
+    Object.keys(val)
+      .sort()
+      .forEach((key) => {
+        result[key] = valToKey(val[key])
+      })
+    return JSON.stringify(result)
+  }
+
+  return val
+}

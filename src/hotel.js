@@ -116,12 +116,20 @@ export default function hotel({ door, onOpen }) {
         // а может и асинхронно - если не получались
         // поэтому нужен await
         /* const favoriteBooksAuthorsIds = await booksAuthorsD.s('author').get({
-          id: any(favoriteBooksIds),
-        })
-
+          id: any(favoriteBooksD.s('id').out({
+            user: userId
+          })),
+        }) */
+        /*
         return authorD.get(
           {
-            id: any(favoriteBooksAuthorsIds),
+            id: any(
+              booksAuthorsD.s('author').out({
+                id: any(favoriteBooksD.s('id').out({
+                  user: userId
+                })),
+              })
+            ),
           },
           { pag }
         ) */

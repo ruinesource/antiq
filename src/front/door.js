@@ -21,9 +21,6 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
     door[k] = event(door, setters[k], k)
   }
 
-  door.get = (id) => get(name, id)
-  door.put = (diff) => put(name, diff)
-
   return door
 }
 
@@ -121,7 +118,7 @@ function event(door, apiFn, apiName) {
     function withSettedEvent(method) {
       return async (...args) => {
         g.currentEvent = event
-        const result = await method()
+        const result = await method(...args)
 
         // по какой-то причине
         // синхронная установка переменных не даёт нужного результата
@@ -135,7 +132,7 @@ function event(door, apiFn, apiName) {
 
     let result
     try {
-      result = await apiFn({ req: { a: args } })
+      result = await apiFn(...args)
     } catch (e) {
       console.log(e)
     }

@@ -42,7 +42,7 @@ export async function get(name, id, opts) {
   // такие поля влияют на ререндер
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
 
-  const nId = normId({ name }, id)
+  const nId = normId(name, id)
   if (g.values[nId]) return g.values[nId]
 
   return sendEvent({
@@ -53,7 +53,7 @@ export async function get(name, id, opts) {
       args: g.currentEvent.args,
     },
     onSuccess: (data) => {
-      setValuesFromResponse(data.v)
+      setValuesFromResponse(data)
 
       return getOne(name, id)
     },

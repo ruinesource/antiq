@@ -50,7 +50,7 @@ export default function hotel({ door, onOpen }) {
 
         const book = await bookD.get(id)
 
-        console.log(book)
+        // console.log(id, book)
         // можем ли мы в асинхронный поток перед конкретным событием задать переменную?
         // обернуть выполнение кода события, поставив микротаск в очередь перед микротаском события
 

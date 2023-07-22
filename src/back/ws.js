@@ -28,17 +28,20 @@ function onSocketConnect(ws) {
   )
 
   ws.on('message', async function (message) {
-    const currentEvent = JSON.parse(message)
-    const { eventId, doorName, method, args } = currentEvent
+    const event = JSON.parse(message)
+    const { doorName, method, args } = event
+    event.results = []
 
-    // здесь нужно получить:
-    // 1. результаты всех get внутри
-    // 2. id всех сущностей из put
+    // здесь в results записываем по порядку:
+    // 1. результаты всех get
+    // 2. все изменения put
+    // 3. все удалённые элементы
 
-    g.currentEvent = currentEvent
-    const values = await g.door[doorName][method](...args)
+    g.currentEvent = event
 
-    ws.send(JSON.stringify(values))
+    await g.door[doorName][method](...args)
+
+    ws.send(JSON.stringify(event))
 
     // switch (t) {
     //   case 'get': {

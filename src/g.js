@@ -12,21 +12,22 @@ const g = {
   },
   door: {}, // name: door
   values: {}, // normId: item
+  promises: {},
   updates: {}, // normId: [diff, diff...]
   listner: {},
   loaders: {}, // eventId | methodId: bool
-  openingPromise: new Promise((r) => {
-    openingPromiseResolver.exec = r
-  }),
-  opened: false,
   methods: {},
   currentEvent: {
     id: null,
     doorName: '',
     method: '',
     args: [],
+    results: [],
   },
-  currentEventId: null,
+  openingPromise: new Promise((r) => {
+    openingPromiseResolver.exec = r
+  }),
+  opened: false,
 }
 
 export default g

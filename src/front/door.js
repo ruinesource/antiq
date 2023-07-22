@@ -110,6 +110,10 @@ function event(door, apiFn, apiName) {
 
     // ответ { methodResult, eventsResults }
 
+    // на фронте асихнронность есть только один раз
+    // и мы можем устанавливать g.currentEvent только один раз, в ws.js при приёме
+    // но на сервере возможно несколько асихнронностей внутри экшна
+
     function setActionsWithEventToDoor() {
       door.get = withSettedEvent((id) => get(door.name, id))
       door.put = withSettedEvent((diff) => put(door.name, diff))

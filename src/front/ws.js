@@ -1,5 +1,5 @@
 import g, { openingPromiseResolver } from '../g.js'
-export const ws = new WebSocket('ws://localhost:5588')
+const ws = new WebSocket('ws://localhost:5588')
 
 let sessionId
 
@@ -25,14 +25,14 @@ export function openWs() {
   ws.onmessage = async (msg) => {
     const data = JSON.parse(msg.data)
 
-    if (data.t === 'open') {
-      sessionId = data.sessionId
-      return
-    }
+    // if (data.t === 'open') {
+    //   sessionId = data.sessionId
+    //   return
+    // }
 
-    if (g.listner[data.i]) {
-      await g.listner[data.i](data)
-      delete g.listner[data.i]
+    if (g.listner[data.eventId]) {
+      await g.listner[data.eventId](data)
+      delete g.listner[data.eventId]
     }
   }
 
@@ -54,18 +54,15 @@ export function sendEvent({ event, onSuccess }) {
     reject = rej
   })
 
-  g.listner[event.i] = async (data) => {
-    if (data.e) {
-      reject(data.e)
+  g.listner[event.eventId] = async (resolvedEvent) => {
+    if (resolvedEvent.error) {
+      reject(resolvedEvent.error)
     } else {
-      const result = await onSuccess(data)
-
-      g.currentEventId = event.i
-      // set methods
+      const result = await onSuccess(resolvedEvent.results)
 
       resolve(result)
     }
-    delete g.listner[event.i]
+    delete g.listner[event.eventId]
   }
 
   return promise

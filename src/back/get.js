@@ -29,18 +29,13 @@ import { isDoor, isPlainObject } from '../utils.js'
 // если нужно несколько действий на сервере
 // фронт это всё ждёт пока сделает сервер
 
-export async function get(name, id, res = {}) {
-  await getItem(name, id, res)
+export async function get(name, id) {
+  const result = await getItem(name, id)
 
-  // в res записывается что-то не то
-  // для pk-запросов возвращаем саму сущность
-  // для запросов массива возвращаем массив
-  console.log(JSON.stringify(res))
-
-  return res
+  return result
 }
 
-async function getItem(name, id, res, door, desc) {
+async function getItem(name, id, door, desc) {
   let pk = 'id'
   if (!door) door = name
   else pk = door
@@ -54,14 +49,10 @@ async function getItem(name, id, res, door, desc) {
   for (let key in desc) {
     if (isDoor(desc[key])) {
       const childName = desc[key].name
-      await getItem(childName, inst[key], res)
+      await getItem(childName, inst[key])
     } else if (isPlainObject(desc[key])) {
-      inst[key] = await getItem(`${name}_${key}`, id, res, door, desc[key])
+      inst[key] = await getItem(`${name}_${key}`, id, door, desc[key])
     }
-  }
-  if (name === door) {
-    if (!res[name]) res[name] = {}
-    res[name][id] = inst
   }
   return inst
 }

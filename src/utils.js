@@ -38,17 +38,6 @@ export const pathGet = (x, path) => {
   }
 }
 
-export const withEventId = (method, eventId) => {
-  return async (...args) => {
-    const result = await method(...args)
-
-    // устанавливаем currentEventId для следующего метода
-    g.currentEventId = eventId
-
-    return result
-  }
-}
-
 export function valToKey(val) {
   if (Array.isArray(val)) return JSON.stringify(val.map(valToKey))
 

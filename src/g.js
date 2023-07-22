@@ -23,6 +23,7 @@ const g = {
     method: '',
     args: [],
     results: [],
+    count: -1,
   },
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r

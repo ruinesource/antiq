@@ -26,7 +26,8 @@ import { isPlainObject, isDoor, normId } from '../utils.js'
 // результаты записываем в eventId: [updates]
 
 export async function get(name, id, opts) {
-  const { currentEvent } = g
+  const { currentEvent: event } = g
+  ++event.count
 
   // здесь если сущность уже есть на фронте со всеми полями
   // возвращаем её даже без промиса, синхронным кодом
@@ -35,35 +36,35 @@ export async function get(name, id, opts) {
   // такие поля влияют на ререндер
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
 
-  if (currentEvent.results) {
-    const actionResult = currentEvent.results.shift()
+  const nId = normId(name, id)
+  if (g.values[nId]) {
+    if (!event.results[event.count]) {
+      event.results.push(g.values[nId])
+    }
 
-    return itemToStore(name, actionResult.result)
+    return g.values[nId]
   }
 
-  const nId = normId(name, id)
-  if (g.values[nId]) return g.values[nId]
+  // results для автоматического сета на фронт
+  // results посчитанное на фронте и не требующее отправки на сервер
+
+  if (event.results[event.count]) {
+    return actionResultToStore()
+  }
 
   return sendEvent({
-    event: {
-      eventId: currentEvent.id,
-      doorName: currentEvent.doorName,
-      method: currentEvent.method,
-      args: currentEvent.args,
-    },
-    onSuccess: (eventResults) => {
-      currentEvent.results = eventResults
-
-      const actionResult = eventResults.shift()
-
-      return itemToStore(name, actionResult.result)
-    },
+    event,
+    onSuccess: actionResultToStore,
   })
 }
 
 // граф нужен для удаления элементов
 // и знать что ререндерить, какие методы пересчитывать при изменениях
 // (сущность - метод в котором заюзана)
-function itemToStore(doorName, item) {
+function actionResultToStore() {
+  const { doorName, results, count } = g.currentEvent
+
+  const item = results[count]
+
   return (g.values[normId(doorName, item.id)] = item)
 }

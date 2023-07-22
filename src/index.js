@@ -43,8 +43,14 @@ const { bookD } = hotel({ door, onOpen: openWs })
 
 // на put тоже делаем отслеживание
 
-bookD.x().then((res) => console.log(res))
+bookD.x().then((res) => {
+  console.log(res)
+
+  bookD.x().then((res) => console.log(res))
+})
 bookD.y().then((res) => console.log(res))
+
+// bookD.x().then((res) => console.log(res))
 
 // bookD.upd({
 //   name: 'oki',

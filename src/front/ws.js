@@ -7,7 +7,7 @@ let sessionId
 // {
 //   t: 'get',
 //   a: [name, id],
-//   i: eventId,
+//   i: id,
 // }
 
 // структура ответа
@@ -23,16 +23,16 @@ export function openWs() {
   }
 
   ws.onmessage = async (msg) => {
-    const data = JSON.parse(msg.data)
+    const event = JSON.parse(msg.data)
 
-    // if (data.t === 'open') {
-    //   sessionId = data.sessionId
+    // if (event.t === 'open') {
+    //   sessionId = event.sessionId
     //   return
     // }
 
-    if (g.listner[data.eventId]) {
-      await g.listner[data.eventId](data)
-      delete g.listner[data.eventId]
+    if (g.listner[event.id]) {
+      await g.listner[event.id](event)
+      delete g.listner[event.id]
     }
   }
 
@@ -54,15 +54,18 @@ export function sendEvent({ event, onSuccess }) {
     reject = rej
   })
 
-  g.listner[event.eventId] = async (resolvedEvent) => {
-    if (resolvedEvent.error) {
-      reject(resolvedEvent.error)
+  g.listner[event.id] = async (serverEvent) => {
+    event.results = serverEvent.results
+    g.currentEvent = event
+
+    if (serverEvent.error) {
+      reject(serverEvent.error)
     } else {
-      const result = await onSuccess(resolvedEvent.results)
+      const result = await onSuccess(serverEvent.results)
 
       resolve(result)
     }
-    delete g.listner[event.eventId]
+    delete g.listner[event.id]
   }
 
   return promise

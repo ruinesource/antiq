@@ -45,7 +45,7 @@ import g from '../g.js'
 // а не айди
 
 export async function put(name, diff, opts) {
-  const { currentEvent } = g
+  const { currentEvent: event } = g
 
   let id = diff.id || Math.random()
   const hasNoId = !diff.id
@@ -58,11 +58,7 @@ export async function put(name, diff, opts) {
   const prevVal = g.values[normId]
 
   const result = await sendEvent({
-    event: {
-      t: 'put',
-      a: [name, diff],
-      i: currentEvent.id,
-    },
+    event,
     onSuccess() {},
   })
 

@@ -29,20 +29,14 @@ function event(door, apiFn, apiName) {
       door.get = withSettedEvent(async (id) => {
         const result = await get(door.name, id)
 
-        event.results.push({
-          type: 'get',
-          result,
-        })
+        event.results.push(result)
 
         return result
       })
       door.put = withSettedEvent(async (diff) => {
         const result = await put(door.name, diff)
 
-        event.results.push({
-          type: 'put',
-          result,
-        })
+        event.results.push(result)
 
         return result
       })

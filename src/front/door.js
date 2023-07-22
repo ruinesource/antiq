@@ -48,12 +48,14 @@ function event(door, apiFn, apiName) {
     // самим экшнам не нужны id, они выполняются по порядку
     // нужен флаг, пришли ли
 
-    const event = {
-      id: g.currentEvent?.id || Math.random(),
+    const event = (g.currentEvent = {
+      id: /* g.currentEvent?.id || */ Math.random(),
       doorName: door.name,
       method: apiName,
+      results: [],
+      count: -1,
       args,
-    }
+    })
 
     g.methods[event.id] = [] // [{ type: 'get', args: [] }]
     g.loaders[event.id] = true

@@ -1,4 +1,5 @@
 import g from '../g.js'
+import { valToKey } from '../utils.js'
 import { get } from './get.js'
 import { put } from './put.js'
 
@@ -11,14 +12,16 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
 
   g.door[name] = door
   g.values[name] = {}
+  g.events[name] = {}
   g.desc[name] = descFunc
 
   for (let k in getters) {
     door[k] = event(door, getters[k], k)
+    g.events[name][k] = {}
   }
 
   for (let k in setters) {
-    door[k] = event(door, setters[k], k)
+    door[k] = event(door, setters[k], k, true)
   }
 
   return door
@@ -36,8 +39,9 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
 // если ивент вызвался внутри не через event, то создастся новый ивент
 // и руками отменять придётся два действия в случае ошибки одного из них
 
-function event(door, apiFn, apiName) {
+function event(door, apiFn, apiName, isSetter) {
   return async function event(...args) {
+    const argsKey = valToKey(args)
     // 1. делаем массив операций ивента
     // 2. при первой нехватке данных или изменении бд отправляем запрос
     // 3. в ответе получаем либо ошибку, либо результат всех операций ивента
@@ -61,6 +65,9 @@ function event(door, apiFn, apiName) {
     g.loaders[event.id] = true
 
     if (!g.opened) await g.openingPromise
+
+    if (!isSetter && g.events[door.name][apiName][argsKey])
+      return g.events[door.name][apiName][argsKey]
 
     // get(id) === getOne
     // get({ ...equalityFilters }, { sort: ['name.asc'], pag: [from, to] }) === get[]
@@ -121,10 +128,10 @@ function event(door, apiFn, apiName) {
       door.put = withSettedEvent((diff) => put(door.name, diff))
     }
 
-    function withSettedEvent(method) {
+    function withSettedEvent(action) {
       return async (...args) => {
         g.currentEvent = event
-        const result = await method(...args)
+        const result = await action(...args)
 
         // по какой-то причине
         // синхронная установка переменных не даёт нужного результата
@@ -138,7 +145,11 @@ function event(door, apiFn, apiName) {
 
     let result
     try {
-      result = await apiFn(...args)
+      const promise = (g.events[door.name][apiName][argsKey] = apiFn(...args))
+
+      result = await promise
+
+      g.events[door.name][apiName][argsKey] = result
     } catch (e) {
       console.log(e)
     }

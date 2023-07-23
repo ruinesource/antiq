@@ -48,6 +48,7 @@ bookD.x().then((res) => {
 
   bookD.x().then((res) => console.log(res))
 })
+bookD.x().then((res) => console.log(res))
 bookD.y().then((res) => console.log(res))
 
 // bookD.x().then((res) => console.log(res))

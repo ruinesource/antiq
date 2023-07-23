@@ -7,15 +7,8 @@ export const openingPromiseResolver = {
 const g = {
   orm: {}, // name: () => ...pathToChild[]
   desc: {}, // { name: desc },
-  queries: {
-    createTable: [],
-  },
   door: {}, // name: door
   values: {}, // normId: item
-  promises: {},
-  updates: {}, // normId: [diff, diff...]
-  listner: {},
-  loaders: {}, // eventId | methodId: bool
   methods: {},
   currentEvent: {
     id: null,
@@ -25,10 +18,22 @@ const g = {
     results: [],
     count: -1,
   },
+
+  // front
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r
   }),
   opened: false,
+  listner: {},
+  promises: {},
+  events: {}, // door: method: args: promise/result
+  updates: {}, // normId: [diff, diff...]
+  loaders: {}, // eventId | methodId: bool
+
+  // back
+  queries: {
+    createTable: [],
+  },
 }
 
 export default g

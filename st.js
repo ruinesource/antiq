@@ -5,18 +5,15 @@ import g from './src/g.js'
 import { setDoorCreationQueries } from './src/back/createTables.js'
 import { db } from './src/back/db.js'
 
-hotel({
-  door,
-  onOpen: async () => {
-    const sql = await db()
+hotel(door)
 
-    for (let k in g.desc) {
-      // resolve descriptions
-      g.desc[k] = g.desc[k]()
+const sql = await db()
 
-      setDoorCreationQueries(k)
-    }
+for (let k in g.desc) {
+  // resolve descriptions
+  g.desc[k] = g.desc[k]()
 
-    g.queries.createTable.forEach((q) => sql(q))
-  },
-})
+  setDoorCreationQueries(k)
+}
+
+g.queries.createTable.forEach((q) => sql(q))

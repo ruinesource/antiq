@@ -4,9 +4,7 @@
 // конфликт имён с таблицами внутренних свойств
 // при table { deep: {} } не может существовать door table_deep
 
-import g from './g.js'
-
-export default function hotel({ door, onOpen }) {
+export default function hotel(door) {
   const teamMemberD = door('team_member', () => ({ name: '' }))
 
   const authorD = door('author', () => ({
@@ -180,5 +178,5 @@ export default function hotel({ door, onOpen }) {
     }
   )
 
-  return onOpen()
+  return { bookD }
 }

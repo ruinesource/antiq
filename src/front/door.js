@@ -58,6 +58,7 @@ function event(door, apiFn, apiName, isSetter) {
       method: apiName,
       results: [],
       count: -1,
+      updates: [],
       args,
     })
 

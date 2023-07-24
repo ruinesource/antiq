@@ -53,21 +53,20 @@ export async function put(doorName, diff, opts) {
 
   const nId = normId(doorName, id)
   const value = g.values[nId] || {}
+  let updateIdx
 
   if (event.results[event.count]) {
     const itemFromServer = event.results[event.count]
     for (let k of itemFromServer) {
       value[k] = itemFromServer[k]
     }
+    rerenderBounded(doorName, nId)
     return value
   } else {
     // сохраняем diff во временное хранилище
     // ререндерим связанные get
-    if (g.updates[nId]) {
-      g.updates[nId].push(diff)
-    } else {
-      g.updates[nId] = [diff]
-    }
+
+    addPutUpdate(nId, diff)
     rerenderBounded(doorName, nId)
   }
 
@@ -85,11 +84,44 @@ export async function put(doorName, diff, opts) {
       for (let k of itemFromServer) {
         value[k] = itemFromServer[k]
       }
-      rerenderBounded(doorName, nId)
     },
+    // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
+    // нужно применять изменения сразу, сохраняя предыдущие значения
+    // в случае ошибки даём возможность предыдущие значения вернуть
+    //
   })
 
   return result
 }
 
 function rerenderBounded(doorName, nextValue) {}
+
+function addPutUpdate(nId, diff) {
+  const { currentEvent: event } = g
+
+  const prevValues = {}
+  const value = g.values[nId]
+
+  for (let key in diff) {
+    prevValues[key] = value[key]
+    value[key] = diff[key]
+    // ...
+  }
+
+  const idx = event.prevValues.length
+  event.prevValues.push(diff)
+
+  if (g.prevValues[nId]) {
+    g.prevValues[nId].push([event.id, idx])
+  } else {
+    g.prevValues[nId] = [[event.id, idx]]
+  }
+
+  return idx
+}
+
+function applyPutUpdate(nId, idx) {
+  const { currentEvent: event } = g
+}
+
+function clearPutUpdate(nId, diff) {}

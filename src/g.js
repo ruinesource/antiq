@@ -16,6 +16,7 @@ const g = {
     method: '',
     args: [],
     results: [],
+    prevValues: [],
     count: -1,
   },
 
@@ -27,7 +28,7 @@ const g = {
   listner: {},
   promises: {},
   events: {}, // door: method: args: promise/result
-  updates: {}, // normId: [diff, diff...]
+  prevValues: {}, // normId: [diff, diff...]
   loaders: {}, // eventId | methodId: bool
 
   // back

@@ -38,9 +38,7 @@ export async function get(name, id, opts) {
 
   const nId = normId(name, id)
   if (g.values[nId]) {
-    if (!event.results[event.count]) {
-      event.results.push(g.values[nId])
-    }
+    if (!event.results[event.count]) event.results.push(g.values[nId])
 
     return g.values[nId]
   }
@@ -48,9 +46,7 @@ export async function get(name, id, opts) {
   // results для автоматического сета на фронт
   // results посчитанное на фронте и не требующее отправки на сервер
 
-  if (event.results[event.count]) {
-    return actionResultToStore()
-  }
+  if (event.results[event.count]) return actionResultToStore()
 
   return sendEvent({
     event,

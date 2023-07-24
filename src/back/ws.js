@@ -33,24 +33,20 @@ function onSocketConnect(ws) {
     event.results = []
 
     // здесь в results записываем по порядку:
-    // 1. результаты всех get
-    // 2. все изменения put
-    // 3. все удалённые элементы
+    // результаты get
+    // изменения put
+    // удалённые элементы
+    // результаты back
 
     g.currentEvent = event
 
     await g.door[doorName][method](...args)
 
-    ws.send(JSON.stringify(event))
-
-    // switch (t) {
-    //   case 'get': {
-    //     const v = await g.door[name].get(id)
-    //     ws.send(JSON.stringify({ i, v }))
-    //     break
-    //   }
-    //   default:
-    //     return null
-    // }
+    ws.send(
+      JSON.stringify({
+        id: event.id,
+        results: event.results,
+      })
+    )
   })
 }

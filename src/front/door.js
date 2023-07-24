@@ -149,7 +149,7 @@ function event(door, apiFn, apiName, isSetter) {
 
       result = await promise
 
-      g.events[door.name][apiName][argsKey] = result
+      if (!isSetter) g.events[door.name][apiName][argsKey] = result
     } catch (e) {
       console.log(e)
     }

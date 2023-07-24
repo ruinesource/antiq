@@ -44,35 +44,52 @@ import g from '../g.js'
 // и в массивах хранятся в своими экземплярами
 // а не айди
 
-export async function put(name, diff, opts) {
+export async function put(doorName, diff, opts) {
   const { currentEvent: event } = g
+  ++event.count
 
   let id = diff.id || Math.random()
   const hasNoId = !diff.id
 
-  // идём по diff и меняем фронтовый стор
-  // смотрим desc и перезаписываем relations
+  const nId = normId(doorName, id)
+  const value = g.values[nId] || {}
 
-  const nId = normId(name, id)
+  if (event.results[event.count]) {
+    const itemFromServer = event.results[event.count]
+    for (let k of itemFromServer) {
+      value[k] = itemFromServer[k]
+    }
+    return value
+  } else {
+    // сохраняем diff во временное хранилище
+    // ререндерим связанные get
+    if (g.updates[nId]) {
+      g.updates[nId].push(diff)
+    } else {
+      g.updates[nId] = [diff]
+    }
+    rerenderBounded(doorName, nId)
+  }
 
-  const prevVal = g.values[normId]
-
+  // отмена изменений на ошибке
   const result = await sendEvent({
     event,
-    onSuccess() {},
-  })
+    onSuccess() {
+      const itemFromServer = event.results[event.count]
 
-  // если сущность новая id нет, генерируем его на фронте
-  // после подставляем полученный с бэка и везде замещаем
+      if (hasNoId) {
+        // changeId everywhere
+      }
+      g.updates[nId].splice(g.updates[nId].indexOf(diff), 1)
+
+      for (let k of itemFromServer) {
+        value[k] = itemFromServer[k]
+      }
+      rerenderBounded(doorName, nId)
+    },
+  })
 
   return result
 }
 
-// записать diff
-// пройтись по desc в поисках новых отношений
-function applyRelations(desc, inst, diff, stack) {
-  if (!g.updates[diff.id]) g.updates[diff.id] = [{}]
-  else g.updates[diff.id].push({})
-}
-
-function merge(desc, diff) {}
+function rerenderBounded(doorName, nextValue) {}

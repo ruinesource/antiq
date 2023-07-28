@@ -21,13 +21,16 @@ const g = {
 
   // front
   values: {}, // normId: item
-  showedValues: {},
+  val: {}, // normId: lastSavedItem
+  updated_at: {
+    values: {}, // normId: { field: updated_at }
+    val: {}, // normId: updated_at
+  },
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r
   }),
   opened: false,
-  listner: {},
-  promises: {},
+  listner: {}, // eventId: onSuccess
   events: {}, // door: method: args: promise/result
   loaders: {}, // eventId | methodId: bool
 

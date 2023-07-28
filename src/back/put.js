@@ -14,7 +14,6 @@ import g from '../g.js'
 
 export async function put(name, diff) {
   const queries = []
-  const diffs = {}
   const delayedIds = new Map()
   const desc = g.desc[name]
   const path = [name]
@@ -24,7 +23,6 @@ export async function put(name, diff) {
     path,
     diff,
     desc,
-    diffs,
     queries,
     delayedIds
   )
@@ -32,8 +30,8 @@ export async function put(name, diff) {
   await execQueries(queries, delayedIds)
 
   // подписчиков устанавливаем на get по сущностям
-  console.log({ item: tableDiff, diffs })
-  return { item: tableDiff, diffs } // [...queries], { norm-propName: { itemId: itemDiff } }
+  console.log({ item: tableDiff })
+  return { item: tableDiff } // [...queries], { norm-propName: { itemId: itemDiff } }
 }
 
 async function setPutVars(
@@ -41,7 +39,6 @@ async function setPutVars(
   path,
   diff,
   desc,
-  diffs,
   queries,
   delayedIds,
   parentQuery,
@@ -52,7 +49,8 @@ async function setPutVars(
 
   // дата updated_at устанавливается раньше, чем объект устанавливается в таблицу
   // перенести это в момент выполнения query
-  const tableDiff = { updated_at: new Date().toISOString() }
+  const tableDiff =
+    tableName === doorName ? { updated_at: new Date().toISOString() } : {}
 
   // query: { diff, key }
   // при выполнении этого квери следует подставить сгенеренный id в родительский diff
@@ -108,7 +106,6 @@ async function setPutVars(
             [name],
             diff[key],
             g.desc[name],
-            diffs,
             queries,
             delayedIds
           )
@@ -132,7 +129,6 @@ async function setPutVars(
           [...path, key],
           diff[key],
           desc[key],
-          diffs,
           queries,
           delayedIds
         )
@@ -145,7 +141,6 @@ async function setPutVars(
           [...path, key],
           diff[key],
           desc[key],
-          diffs,
           queries,
           delayedIds,
           parentQuery,
@@ -179,19 +174,10 @@ async function setPutVars(
       key: key,
     })
   }
-  diffs[tableName] = tableDiff
   return { query, tableDiff }
 }
 
-function setPutArrayVars(
-  doorName,
-  path,
-  diff,
-  desc,
-  diffs,
-  queries,
-  delayedIds
-) {
+function setPutArrayVars(doorName, path, diff, desc, queries, delayedIds) {
   const tableName = tn(...path)
   const innerType = desc[0]
   if (isSplice(diff)) {

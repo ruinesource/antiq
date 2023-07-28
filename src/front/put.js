@@ -1,5 +1,5 @@
 import { sendEvent } from './ws.js'
-import { normId } from '../utils.js'
+import { normId, iterate, isPlainObject, set } from '../utils.js'
 import g from '../g.js'
 
 // строим граф
@@ -39,7 +39,7 @@ import g from '../g.js'
 // addedRelations, removedRelations
 
 // сущности все мутируются из put и создаются только один раз
-// но мутировать их вручную бессмысленно
+// но мутировать их самостоятельно бессмысленно
 // к системе привязан сам метод put
 // и в массивах хранятся в своими экземплярами
 // а не айди
@@ -50,16 +50,23 @@ export async function put(doorName, diff, opts) {
 
   let id = diff.id || Math.random()
   const hasNoId = !diff.id
+  const date = Date.now()
 
   const nId = normId(doorName, id)
-  const value = g.values[nId] || {}
-  let updateIdx
+  const value = g.values[nId] || (g.values[nId] = {})
+  const val = g.vals[nId] || (g.vals[nId] = {})
+  const updated_at =
+    g.updated_at[nId] || (g.updated_at[nId] = { value: '', values: {} })
 
   if (event.results[event.count]) {
     const itemFromServer = event.results[event.count]
-    for (let k of itemFromServer) {
-      value[k] = itemFromServer[k]
-    }
+    iterate(itemFromServer, (inst, path) => {
+      // ключи "" и массивов?
+      if (!isPlainObject(inst)) {
+        set(value, path, inst)
+        updated_at.values[path.join('.')] = date
+      }
+    })
     rerenderBounded(doorName, nId)
     return value
   } else {
@@ -77,7 +84,7 @@ export async function put(doorName, diff, opts) {
       const itemFromServer = event.results[event.count]
 
       if (hasNoId) {
-        // changeId everywhere
+        val()
       }
       g.updates[nId].splice(g.updates[nId].indexOf(diff), 1)
 
@@ -93,13 +100,14 @@ export async function put(doorName, diff, opts) {
 
   return result
 }
+
 // корневая сущность и отображаемая
 // у корневой есть дата последнего изменения на сервере, она всегда приходит и записывается для всех полей
 // если дата пришла позже записанной для сущности, то ничего не меняем
 // get изменяет корневую всегда, если дата поля в корневой сущности раньше updated_at из get
 // изменение put корневую сущность не меняет
 // подтверждение put изменяет корневую всегда, если дата поля в корневой сущности раньше updated_at с сервера
-// если дата пришла позже записанной для сущности, то ничего в корневой не меняемы
+// если дата пришла позже записанной для сущности, то ничего в корневой не меняем
 
 // у полей отображаемой сущности тоже свой updated_at
 // подтверждение put меняет значение updated_at полей отображаемой сущности, если оно позже
@@ -108,6 +116,13 @@ export async function put(doorName, diff, opts) {
 // get меняет все поля отображаемой сущности, у которых updated_at раньше того что пришел в get
 
 // сущности формы - это свои отдельные сущности, которые могут быть подключены к обновлению полей дверей
+
+// кроме того, есть сущности методов результата вызовов только get
+// при всех изменениях сущностей внутри них
+// их результаты вызовов поскольку запомнены, мы запоминаем и ререндерим их на фронте
+
+// на put и get мы создаём поключение к каждому связанному полю сущности
+// при изменении полей всегда приходит дата запоминания в дб
 
 function rerenderBounded(doorName, nextValue) {}
 

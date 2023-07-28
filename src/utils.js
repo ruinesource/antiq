@@ -32,9 +32,9 @@ export const normId = (door, x) => {
 }
 
 export const pathGet = (x, path) => {
-  for (let key in path) {
+  for (let k in path) {
     if (!x) return void 0
-    x = x[key]
+    x = x[k]
   }
 }
 
@@ -45,11 +45,37 @@ export function valToKey(val) {
     let result = {}
     Object.keys(val)
       .sort()
-      .forEach((key) => {
-        result[key] = valToKey(val[key])
+      .forEach((k) => {
+        result[k] = valToKey(val[k])
       })
     return JSON.stringify(result)
   }
 
   return val
+}
+
+export function set(to, path, value) {
+  const lght = path.length
+  for (let i = 0; i < lght; i++) {
+    const k = path[i]
+    if (lght === i + 1) to[k] = value
+    else to = to[k] || (to[k] = {})
+  }
+}
+
+export function iterate(inst, cb, path = []) {
+  cb(inst, path)
+
+  if (Array.isArray(inst))
+    for (let i = 0; i < inst.length; i++) {
+      path.push(i)
+      iterate(inst[i], cb, path)
+      path.pop()
+    }
+  if (isPlainObject(inst))
+    for (let k in inst) {
+      path.push(k)
+      iterate(inst[k], cb, path)
+      path.pop()
+    }
 }

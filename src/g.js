@@ -8,7 +8,6 @@ const g = {
   orm: {}, // name: () => ...pathToChild[]
   desc: {}, // { name: desc },
   door: {}, // name: door
-  values: {}, // normId: item
   methods: {},
   currentEvent: {
     id: null,
@@ -21,6 +20,8 @@ const g = {
   },
 
   // front
+  values: {}, // normId: item
+  showedValues: {},
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r
   }),
@@ -28,7 +29,6 @@ const g = {
   listner: {},
   promises: {},
   events: {}, // door: method: args: promise/result
-  prevValues: {}, // normId: [diff, diff...]
   loaders: {}, // eventId | methodId: bool
 
   // back

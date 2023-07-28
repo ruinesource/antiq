@@ -1,8 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import hotel from './hotel.js'
-import { openWs } from './front/ws.js'
-import { door } from './front/door.js'
+import { open } from './front/ws.js'
 
 function App() {
   // useD(bookD.one, 17)
@@ -11,8 +10,7 @@ function App() {
   return <div className="App"></div>
 }
 
-const { bookD } = hotel(door)
-openWs()
+const { bookD } = open(hotel)
 
 // если мы вызываем извне реакта
 // в useD с теми же аргументами должны оказываться сущности без отправки запроса

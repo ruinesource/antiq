@@ -1,4 +1,5 @@
 import g, { openingPromiseResolver } from '../g.js'
+import { door } from './door.js'
 const ws = new WebSocket('ws://localhost:5588')
 
 let sessionId
@@ -12,7 +13,7 @@ let sessionId
 
 // структура ответа
 
-export function openWs() {
+export function open(hotel) {
   for (let key in g.desc) {
     g.desc[key] = g.desc[key]()
   }
@@ -35,6 +36,8 @@ export function openWs() {
       delete g.listner[event.id]
     }
   }
+
+  hotel(door)
 
   const doors = {}
   for (let k in g.door) {

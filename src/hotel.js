@@ -170,11 +170,21 @@ export default function hotel(door) {
 
       // на фронте put синхронен
       // но всё равно ставит лоадер на ивент
-      upd: async ({ req, res }) => {
-        const book = await bookD.put(req.a)
+      upd: async (diff) => {
+        const book = await bookD.put(diff)
 
         return book
       },
+
+      add: () => {
+        return bookD.put({
+          team_member: null,
+          authors: [],
+          deep: { ea: 'valDeep', very: { ea: 'valVery' } },
+        })
+      },
     }
   )
+
+  return bookD
 }

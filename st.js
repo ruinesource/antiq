@@ -5,7 +5,7 @@ import g from './src/g.js'
 import { setDoorCreationQueries } from './src/back/createTables.js'
 import { db } from './src/back/db.js'
 
-hotel(door)
+const bookD = hotel(door)
 
 const sql = await db()
 
@@ -17,3 +17,5 @@ for (let k in g.desc) {
 }
 
 g.queries.createTable.forEach((q) => sql(q))
+
+bookD.add().then(console.log)

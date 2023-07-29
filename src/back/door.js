@@ -2,7 +2,7 @@ import g from '../g.js'
 import { get } from './get.js'
 import { put } from './put.js'
 
-export function door(name, descFunc, api = {}, options) {
+export function door(name, descFunc, getters = {}, setters = {}, options) {
   g.desc[name] = descFunc
 
   // нужно сделать очередь методов и результатов, которая отправляется на фронт
@@ -14,8 +14,12 @@ export function door(name, descFunc, api = {}, options) {
     name,
   })
 
-  for (let k in api) {
-    door[k] = event(door, api[k], k)
+  for (let k in getters) {
+    door[k] = event(door, getters[k], k)
+  }
+
+  for (let k in setters) {
+    door[k] = event(door, setters[k], k)
   }
 
   return door

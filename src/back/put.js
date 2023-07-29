@@ -13,25 +13,19 @@ import g from '../g.js'
 // таблица с графом экземпляр-экземпляр
 
 export async function put(name, diff) {
-  const queries = []
-  const delayedIds = new Map()
   const desc = g.desc[name]
   const path = [name]
 
-  const { tableDiff } = await setPutVars(
+  const { tableDiff, queries, delayedIds } = await setPutVars(
     name,
     path,
     diff,
-    desc,
-    queries,
-    delayedIds
+    desc
   )
 
   await execQueries(queries, delayedIds)
 
-  // подписчиков устанавливаем на get по сущностям
-  console.log({ item: tableDiff })
-  return { item: tableDiff } // [...queries], { norm-propName: { itemId: itemDiff } }
+  return tableDiff
 }
 
 async function setPutVars(
@@ -39,8 +33,8 @@ async function setPutVars(
   path,
   diff,
   desc,
-  queries,
-  delayedIds,
+  delayedIds = new Map(),
+  queries = [],
   parentQuery,
   childsQueries = []
 ) {
@@ -91,7 +85,6 @@ async function setPutVars(
 
   if (isPlainObject(desc)) {
     for (let key in diff) {
-      // console.log(diff, key)
       if (!desc.hasOwnProperty(key) && key !== 'id')
         throw `unknown property ${desc}`
 
@@ -106,8 +99,8 @@ async function setPutVars(
             [name],
             diff[key],
             g.desc[name],
-            queries,
-            delayedIds
+            delayedIds,
+            queries
           )
           childCreationQuery = result.query
         }
@@ -141,8 +134,8 @@ async function setPutVars(
           [...path, key],
           diff[key],
           desc[key],
-          queries,
           delayedIds,
+          queries,
           parentQuery,
           childsQueries
         )
@@ -174,7 +167,7 @@ async function setPutVars(
       key: key,
     })
   }
-  return { query, tableDiff }
+  return { query, queries, tableDiff, delayedIds }
 }
 
 function setPutArrayVars(doorName, path, diff, desc, queries, delayedIds) {
@@ -197,6 +190,7 @@ function setPutArrayVars(doorName, path, diff, desc, queries, delayedIds) {
   //   if (wasInArray())
   // }
   if (isDoor(innerType)) {
+    // !!! здесь в getArrItems нужно передать rm where book: book_id !!!
     const currentItems = getArrItems(tableName)
     // таблица может принадлежать сущности, в таком случае в ней есть её id
     // [{ author: id }]
@@ -212,14 +206,17 @@ function setPutArrayVars(doorName, path, diff, desc, queries, delayedIds) {
     )
     const rmQuery = {
       type: removeItems,
-      args: [tableName, currentItems],
+      args: [tableName, [{ book: 1 }]],
     }
-    const addQuery = {
-      type: addItems,
-      args: [tableName, nextItems],
-    }
+    queries.push(rmQuery)
 
-    queries.push(rmQuery, addQuery)
+    if (nextItems.values.length) {
+      const addQuery = {
+        type: addItems,
+        args: [tableName, nextItems],
+      }
+      queries.push(addQuery)
+    }
   } else if (isPrimitive(innerType)) {
     // у этих элементов нет id, мы тупо удаляем их все
     // и после записываем снова, они могут и дублироваться
@@ -240,7 +237,11 @@ function setPutArrayVars(doorName, path, diff, desc, queries, delayedIds) {
       type: addItems,
       args: [tableName, nextItems],
     }
-    queries.push(rmQuery, addQuery)
+
+    queries.push(rmQuery)
+    if (nextItems.length) {
+      queries.push(addQuery)
+    }
   } else if (isPlainObject(innerType)) {
     // если это объекты, внутри них могут быть doors
     // в таком случае следует добавить связь в граф
@@ -267,7 +268,7 @@ function setPutArrayVars(doorName, path, diff, desc, queries, delayedIds) {
     }
 
     diff.forEach((item, i) => {
-      setPutVars(doorName, path, item, innerType, queries, delayedIds)
+      setPutVars(doorName, path, item, innerType, delayedIds, queries)
     })
   } else if (Array.isArray(innerType)) {
   }
@@ -296,14 +297,14 @@ values (${Object.keys(diff)
     .join(', ')}) returning ${pk};`
 
 // { pk: item }
-export const getArrItems = (tableName, fields = '*') =>
+export const getArrItems = (tableName, fields = ['*']) =>
   `select ${fields.join(', ')} from ${quot(tableName)};`
 
-export const removeItems = (tableName, items) =>
+export const removeItems = (tableName, items = []) =>
   `delete from ${quot(tableName)} where ${items
     .map((item) =>
       Object.entries(item)
-        .map((x) => x.map(quot).join(' = '))
+        .map((x) => [quot(x[0]), x[1]].join(' = '))
         .join(' and ')
     )
     .join(' or ')};`
@@ -320,6 +321,7 @@ async function execQuery(query, delayedIds) {
   const sql = await db()
   const qDelayed = delayedIds.get(query)
   const q = query.type(...query.args)
+  console.log(q)
   const result = await sql(q)
   if (qDelayed)
     // выполнить qDelayed?

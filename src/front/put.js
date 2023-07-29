@@ -1,5 +1,12 @@
 import { sendEvent } from './ws.js'
-import { normId, iterate, isPlainObject, set } from '../utils.js'
+import {
+  normId,
+  iterate,
+  iteratePrimitives,
+  isPlainObject,
+  set,
+  getPath,
+} from '../utils.js'
 import g from '../g.js'
 
 // строим граф
@@ -44,7 +51,7 @@ import g from '../g.js'
 // и в массивах хранятся в своими экземплярами
 // а не айди
 
-export async function put(doorName, diff, opts) {
+export function put(doorName, diff, opts) {
   const { currentEvent: event } = g
   ++event.count
 
@@ -60,25 +67,22 @@ export async function put(doorName, diff, opts) {
 
   if (event.results[event.count]) {
     const itemFromServer = event.results[event.count]
-    iterate(itemFromServer, (inst, path) => {
-      // ключи "" и массивов?
-      if (!isPlainObject(inst)) {
-        set(value, path, inst)
-        updated_at.values[path.join('.')] = date
-      }
+    iteratePrimitives(itemFromServer, (inst, path) => {
+      // set(value, path, inst)
+      // if (getPath(val, path.slice(0, -1))) set(val, path, inst)
+      // set(updated_at.values, path, date)
     })
     rerenderBounded(doorName, nId)
     return value
   } else {
     // сохраняем diff во временное хранилище
     // ререндерим связанные get
-
     addPutUpdate(nId, diff)
     rerenderBounded(doorName, nId)
   }
 
   // отмена изменений на ошибке
-  const result = await sendEvent({
+  return sendEvent({
     event,
     onSuccess() {
       const itemFromServer = event.results[event.count]
@@ -97,8 +101,6 @@ export async function put(doorName, diff, opts) {
     // в случае ошибки даём возможность предыдущие значения вернуть
     //
   })
-
-  return result
 }
 
 // корневая сущность и отображаемая
@@ -132,10 +134,11 @@ function addPutUpdate(nId, diff) {
   const prevValues = {}
   const value = g.values[nId]
 
+  iteratePrimitives()
+
   for (let key in diff) {
     prevValues[key] = value[key]
     value[key] = diff[key]
-    // ...
   }
 
   const idx = event.prevValues.length

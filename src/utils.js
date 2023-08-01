@@ -8,8 +8,6 @@ export const isPrimitive = (x) => ['string', 'number'].includes(typeof x)
 
 export const tn = (...path) => path.join('_')
 
-export function isStrictArray() {}
-
 export function isSplice() {
   // return { start, deleteCount, items }
   return
@@ -63,6 +61,11 @@ export function set(to, path, value) {
       to = to[k] || (to[k] = typeof k === 'number' ? [] : {})
     }
   }
+  return value
+}
+
+export function isPromise(x) {
+  return x && typeof x.then === 'function'
 }
 
 export function getPath(from, path) {
@@ -90,18 +93,22 @@ export function iterate(inst, cb, path = []) {
     }
 }
 
-export function iteratePrimitives(inst, cb, path = []) {
-  if (Array.isArray(inst))
-    for (let i = 0; i < inst.length; i++) {
-      path.push(i)
-      iterate(inst[i], cb, path)
-      path.pop()
-    }
-  else if (isPlainObject(inst))
-    for (let k in inst) {
-      path.push(k)
-      iterate(inst[k], cb, path)
-      path.pop()
-    }
-  else cb(inst, path)
+export function iteratePrimitivesOrEmpty(inst, cb, path = []) {
+  if (Array.isArray(inst)) {
+    if (!inst.length) cb(inst, path)
+    else
+      for (let i = 0; i < inst.length; i++) {
+        path.push(i)
+        iteratePrimitivesOrEmpty(inst[i], cb, path)
+        path.pop()
+      }
+  } else if (isPlainObject(inst)) {
+    if (!Object.keys(inst).length) cb(inst, path)
+    else
+      for (let k in inst) {
+        path.push(k)
+        iteratePrimitivesOrEmpty(inst[k], cb, path)
+        path.pop()
+      }
+  } else cb(inst, path)
 }

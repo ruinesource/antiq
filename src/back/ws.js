@@ -40,13 +40,17 @@ function onSocketConnect(ws) {
 
     g.currentEvent = event
 
-    await g.door[doorName][method](...args)
-
-    ws.send(
-      JSON.stringify({
-        id: event.id,
-        results: event.results,
-      })
-    )
+    try {
+      await g.door[doorName][method](...args)
+      ws.send(
+        JSON.stringify({
+          id: event.id,
+          results: event.results,
+        })
+      )
+    } catch (e) {
+      console.log(e)
+      ws.send(JSON.stringify({ id: event.id, e }))
+    }
   })
 }

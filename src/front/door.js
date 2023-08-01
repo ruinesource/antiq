@@ -1,5 +1,5 @@
 import g from '../g.js'
-import { valToKey } from '../utils.js'
+import { valToKey, set, isPromise } from '../utils.js'
 import { get } from './get.js'
 import { put } from './put.js'
 
@@ -58,7 +58,6 @@ function event(door, apiFn, apiName, isSetter) {
       method: apiName,
       results: [],
       count: -1,
-      updates: [],
       args,
     })
 
@@ -146,11 +145,9 @@ function event(door, apiFn, apiName, isSetter) {
 
     let result
     try {
-      const promise = (g.events[door.name][apiName][argsKey] = apiFn(...args))
+      result = await apiFn(...args)
 
-      result = await promise
-
-      if (!isSetter) g.events[door.name][apiName][argsKey] = result
+      if (!isSetter) set(g.events, [door.name, apiName, argsKey], result)
     } catch (e) {
       console.log(e)
     }

@@ -21,11 +21,8 @@ const g = {
 
   // front
   values: {}, // normId: item
-  val: {}, // normId: lastSavedItem
-  updated_at: {
-    values: {}, // normId: { field: updated_at }
-    val: {}, // normId: updated_at
-  },
+  vals: {}, // normId: lastSavedItem
+  updated_at: {}, // normId: { val: Date, value: {} },
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r
   }),

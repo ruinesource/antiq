@@ -36,18 +36,31 @@ const { bookD } = open(hotel)
 // при изменении этих сущностей, отправляем на фронт [{ t: 'get', ... }, { ... }] и выполняем с ними метод
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-// метод возвращает promise
-// экшн тоже всегда возвращает promise
+// bookD.x().then((res) => {
+//   console.log(res)
+//
+//   bookD.x().then((res) => console.log(res))
+// })
+// bookD.x().then((res) => console.log(res))
+// bookD.y().then((res) => console.log(res))
 
-// на put тоже делаем отслеживание
-
-bookD.x().then((res) => {
-  console.log(res)
-
-  bookD.x().then((res) => console.log(res))
+bookD.upd({ id: 17, team_member: 8 }).then((e) => {
+  console.log('upd', e)
 })
-bookD.x().then((res) => console.log(res))
-bookD.y().then((res) => console.log(res))
+bookD.one(17).then((e) => {
+  console.log('one', e)
+})
+
+// upd пока не пришел ответ от предыдущего
+// загрузка
+// очередь промисов
+// два выполнения метода
+// отмена ошибки
+// первый запрос успешно, второй ошибка
+// во время выполнения, после выполнения
+// отмена при ошибке в window
+// ререндер использующих метод хуков
+// пересчёт использующих сущность get-методов
 
 // bookD.x().then((res) => console.log(res))
 

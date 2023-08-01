@@ -2,7 +2,7 @@ import { sendEvent } from './ws.js'
 import {
   normId,
   iterate,
-  iteratePrimitives,
+  iteratePrimitivesOrEmpty,
   isPlainObject,
   set,
   getPath,
@@ -53,6 +53,7 @@ import g from '../g.js'
 
 export function put(doorName, diff, opts) {
   const { currentEvent: event } = g
+  const wasNotSended = !g.listner[event.id]
   ++event.count
 
   let id = diff.id || Math.random()
@@ -63,44 +64,45 @@ export function put(doorName, diff, opts) {
   const value = g.values[nId] || (g.values[nId] = {})
   const val = g.vals[nId] || (g.vals[nId] = {})
   const updated_at =
-    g.updated_at[nId] || (g.updated_at[nId] = { value: '', values: {} })
+    g.updated_at[nId] || (g.updated_at[nId] = { val: -Infinity, value: {} })
 
   if (event.results[event.count]) {
     const itemFromServer = event.results[event.count]
-    iteratePrimitives(itemFromServer, (inst, path) => {
-      // set(value, path, inst)
-      // if (getPath(val, path.slice(0, -1))) set(val, path, inst)
-      // set(updated_at.values, path, date)
+    iteratePrimitivesOrEmpty(itemFromServer, (inst, path) => {
+      set(value, path, inst)
+      if (getPath(val, path.slice(0, -1))) set(val, path, inst)
+      set(updated_at.value, path, date)
     })
     rerenderBounded(doorName, nId)
     return value
   } else {
     // сохраняем diff во временное хранилище
     // ререндерим связанные get
-    addPutUpdate(nId, diff)
+    addPutOptimisticUpdate(nId, { ...diff, id })
     rerenderBounded(doorName, nId)
   }
 
   // отмена изменений на ошибке
-  return sendEvent({
-    event,
-    onSuccess() {
-      const itemFromServer = event.results[event.count]
+  if (wasNotSended)
+    sendEvent({
+      event,
+      onSuccess() {
+        const itemFromServer = event.results[event.count]
 
-      if (hasNoId) {
-        val()
-      }
-      g.updates[nId].splice(g.updates[nId].indexOf(diff), 1)
+        updated_at.val = itemFromServer.updated_at
+        delete itemFromServer.updated_at
 
-      for (let k of itemFromServer) {
-        value[k] = itemFromServer[k]
-      }
-    },
-    // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
-    // нужно применять изменения сразу, сохраняя предыдущие значения
-    // в случае ошибки даём возможность предыдущие значения вернуть
-    //
-  })
+        for (let k in itemFromServer) {
+          val[k] = itemFromServer[k]
+          updated_at.value[k] = updated_at.val
+        }
+      },
+      // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
+      // нужно применять изменения сразу, сохраняя предыдущие значения
+      // в случае ошибки даём возможность предыдущие значения вернуть
+    })
+
+  return value
 }
 
 // корневая сущность и отображаемая
@@ -128,29 +130,13 @@ export function put(doorName, diff, opts) {
 
 function rerenderBounded(doorName, nextValue) {}
 
-function addPutUpdate(nId, diff) {
-  const { currentEvent: event } = g
+function addPutOptimisticUpdate(nId, diff, value) {
+  const updated_at = Date.now()
 
-  const prevValues = {}
-  const value = g.values[nId]
-
-  iteratePrimitives()
-
-  for (let key in diff) {
-    prevValues[key] = value[key]
-    value[key] = diff[key]
-  }
-
-  const idx = event.prevValues.length
-  event.prevValues.push(diff)
-
-  if (g.prevValues[nId]) {
-    g.prevValues[nId].push([event.id, idx])
-  } else {
-    g.prevValues[nId] = [[event.id, idx]]
-  }
-
-  return idx
+  iteratePrimitivesOrEmpty(diff, (inst, path) => {
+    set(g.values[nId], path, inst)
+    set(g.updated_at[nId].value, path, updated_at)
+  })
 }
 
 function applyPutUpdate(nId, idx) {

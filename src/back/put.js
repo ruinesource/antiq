@@ -22,10 +22,14 @@ export async function put(name, diff) {
     diff,
     desc
   )
-
   await execQueries(queries, delayedIds)
+  await delay(5000)
 
   return tableDiff
+}
+
+function delay(ms) {
+  return new Promise((r) => setTimeout(r, ms))
 }
 
 async function setPutVars(
@@ -86,7 +90,7 @@ async function setPutVars(
   if (isPlainObject(desc)) {
     for (let key in diff) {
       if (!desc.hasOwnProperty(key) && key !== 'id')
-        throw `unknown property ${desc}`
+        throw `unknown property ${key} in table ${tableName}`
 
       if (isDoor(desc[key])) {
         const childId = isPlainObject(diff[key]) ? diff[key].id : diff[key]
@@ -321,7 +325,6 @@ async function execQuery(query, delayedIds) {
   const sql = await db()
   const qDelayed = delayedIds.get(query)
   const q = query.type(...query.args)
-  console.log(q)
   const result = await sql(q)
   if (qDelayed)
     // выполнить qDelayed?

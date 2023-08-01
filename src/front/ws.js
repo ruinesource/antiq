@@ -64,7 +64,7 @@ export function sendEvent({ event, onSuccess }) {
     if (serverEvent.error) {
       reject(serverEvent.error)
     } else {
-      const result = await onSuccess(serverEvent.results)
+      const result = await onSuccess()
 
       resolve(result)
     }

@@ -5,11 +5,6 @@ import { put } from './put.js'
 export function door(name, descFunc, getters = {}, setters = {}, options) {
   g.desc[name] = descFunc
 
-  // нужно сделать очередь методов и результатов, которая отправляется на фронт
-  // оборачивать методы в eventId
-  // при их выполнении записывать результат в массив
-  // по завершении ивента отправлять этот массив на фронт
-
   const door = (g.door[name] = {
     name,
   })

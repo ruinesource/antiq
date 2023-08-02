@@ -14,10 +14,6 @@ let sessionId
 // структура ответа
 
 export function open(hotel) {
-  for (let key in g.desc) {
-    g.desc[key] = g.desc[key]()
-  }
-
   ws.onopen = () => {
     g.opened = true
     openingPromiseResolver.exec()
@@ -38,6 +34,10 @@ export function open(hotel) {
   }
 
   hotel(door)
+
+  for (let key in g.desc) {
+    g.desc[key] = g.desc[key]()
+  }
 
   const doors = {}
   for (let k in g.door) {

@@ -6,18 +6,16 @@ import { put } from './put.js'
 // ивент и экшн
 
 export function door(name, descFunc, getters = {}, setters = {}, opts) {
-  const door = {
+  const door = (g.door[name] = {
     name,
-  }
-
-  g.door[name] = door
-  g.values[name] = {}
-  g.events[name] = {}
+  })
   g.desc[name] = descFunc
+  g.value[name] = {}
+  g.promise[name] = {}
 
   for (let k in getters) {
     door[k] = event(door, getters[k], k)
-    g.events[name][k] = {}
+    g.promise[name][k] = {}
   }
 
   for (let k in setters) {
@@ -55,19 +53,16 @@ function event(door, apiFn, apiName, isSetter) {
     const event = (g.currentEvent = {
       id: /* g.currentEvent?.id || */ Math.random(),
       doorName: door.name,
-      method: apiName,
+      apiName: apiName,
       results: [],
       count: -1,
       args,
     })
 
-    g.methods[event.id] = [] // [{ type: 'get', args: [] }]
-    g.loaders[event.id] = true
-
     if (!g.opened) await g.openingPromise
 
-    if (!isSetter && g.events[door.name][apiName][argsKey])
-      return g.events[door.name][apiName][argsKey]
+    if (!isSetter && g.promise[door.name][apiName][argsKey])
+      return g.promise[door.name][apiName][argsKey]
 
     // get(id) === getOne
     // get({ ...equalityFilters }, { sort: ['name.asc'], pag: [from, to] }) === get[]
@@ -147,7 +142,11 @@ function event(door, apiFn, apiName, isSetter) {
     try {
       result = await apiFn(...args)
 
-      if (!isSetter) set(g.events, [door.name, apiName, argsKey], result)
+      if (!isSetter)
+        set(g.promise, [door.name, apiName, argsKey, 'event'], {
+          result,
+          event,
+        })
     } catch (e) {
       console.log(e)
     }

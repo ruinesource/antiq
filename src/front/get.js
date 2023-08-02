@@ -1,6 +1,14 @@
 import { sendEvent } from './ws.js'
 import g from '../g.js'
-import { isPlainObject, isDoor, normId } from '../utils.js'
+import {
+  getPath,
+  set,
+  argsKey,
+  iteratePrimitivesOrEmpty,
+  isPlainObject,
+  isDoor,
+  normId,
+} from '../utils.js'
 
 // i eventId
 // d door
@@ -37,30 +45,47 @@ export async function get(name, id, opts) {
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
 
   const nId = normId(name, id)
-  if (g.values[nId]) {
-    if (!event.results[event.count]) event.results.push(g.values[nId])
 
-    return g.values[nId]
+  if (g.value[nId]) {
+    if (!event.results[event.count]) event.results.push(g.value[nId])
+
+    return g.value[nId]
   }
 
   // results для автоматического сета на фронт
   // results посчитанное на фронте и не требующее отправки на сервер
 
-  if (event.results[event.count]) return actionResultToStore()
+  if (event.results[event.count]) return getFromResults()
 
   return sendEvent({
     event,
-    onSuccess: actionResultToStore,
+    onSuccess: getFromResults,
   })
 }
 
-// граф нужен для удаления элементов
-// и знать что ререндерить, какие методы пересчитывать при изменениях
-// (сущность - метод в котором заюзана)
-function actionResultToStore() {
+function getFromResults() {
   const { doorName, results, count } = g.currentEvent
-
+  const { desc } = g.door[doorName]
   const item = results[count]
+  const nId = normId(doorName, item.id)
+  const updated_at = g.updated_at[nId]
 
-  return (g.values[normId(doorName, item.id)] = item)
+  updated_at.val =
+    new Date(item.updated_at) > updated_at.val
+      ? new Date(item.updated_at)
+      : updated_at.val
+  delete item.updated_at
+
+  iteratePrimitivesOrEmpty(item, (x, path) => {
+    set(g.val[nId], path, x)
+
+    const upd_at = getPath(updated_at.value, path) || new Date(0)
+    if (upd_at < updated_at.val) set(g.value[nId], path, x)
+
+    const pathDesc = getPath(desc, path)
+    if (isDoor(pathDesc))
+      set(g.parents, [nId, ...path], normId(pathDesc.name, x))
+
+    set(updated_at.value, path, updated_at.val)
+  })
 }

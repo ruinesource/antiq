@@ -41,10 +41,10 @@ function event(door, apiFn, apiName) {
       })
     }
 
-    function withSettedEvent(method) {
+    function withSettedEvent(apiFn) {
       return async (...args) => {
         g.currentEvent = event
-        const result = await method(...args)
+        const result = await apiFn(...args)
 
         queueMicrotask(setActionsWithEventToDoor)
         return result

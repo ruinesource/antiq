@@ -2,34 +2,45 @@ export const openingPromiseResolver = {
   exec: () => {},
 }
 
-// normId нужен для массивов? да, потому что с сервера они приходят в нормализованном состоянии []
+// nId нужен для массивов? да, потому что с сервера они приходят в нормализованном состоянии []
 // в каком виде нужен граф?
 const g = {
-  orm: {}, // name: () => ...pathToChild[]
+  orm: {}, // name: () => ...pathToChild
   desc: {}, // { name: desc },
   door: {}, // name: door
-  methods: {},
   currentEvent: {
     id: null,
     doorName: '',
-    method: '',
+    apiName: '',
     args: [],
     results: [],
-    prevValues: [],
     count: -1,
+    promise: null,
+    date: null,
   },
 
   // front
-  values: {}, // normId: item
-  vals: {}, // normId: lastSavedItem
-  updated_at: {}, // normId: { val: Date, value: {} },
+  opened: false,
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r
   }),
-  opened: false,
+  value: {}, // nId: item
+  val: {}, // nId: lastConfirmedItem
+  updated_at: {}, // nId: { val: date, value: { field: date } },
+
+  // при удалении идём по родителям и ставим null
+  // массивы фильтруем
+  parents: {}, // nId: parentNormId: { ...path: true }
+
+  // при обновлении обновляем все геттеры, экшны в которых вернули сущность
+  // normIdEvents: {}, // nId: door: getApiName: eventArgsKey: [...actionResultIdx]
+
+  // при удалении удаляем в массивах
+  // при изменении идём по get-массивам и проверяем, выполняется ли условие query
+  // normIdActions: {}, // nId: { door: { getActionArgs: { ...pathsToInst } } }
+
   listner: {}, // eventId: onSuccess
-  events: {}, // door: method: args: promise/result
-  loaders: {}, // eventId | methodId: bool
+  promise: {}, // door: getterName: argsKey: promise/result
 
   // back
   queries: {

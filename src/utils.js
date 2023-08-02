@@ -69,6 +69,7 @@ export function isPromise(x) {
 }
 
 export function getPath(from, path) {
+  if (!from) return void 4
   for (let k of path) {
     if (!from[k]) return void 4
     from = from[k]
@@ -76,39 +77,49 @@ export function getPath(from, path) {
   return from
 }
 
-export function iterate(inst, cb, path = []) {
-  cb(inst, path)
+export function iterate(x, cb, path = []) {
+  cb(x, path)
 
-  if (Array.isArray(inst))
-    for (let i = 0; i < inst.length; i++) {
+  if (Array.isArray(x))
+    for (let i = 0; i < x.length; i++) {
       path.push(i)
-      iterate(inst[i], cb, path)
+      iterate(x[i], cb, path)
       path.pop()
     }
-  if (isPlainObject(inst))
-    for (let k in inst) {
+  if (isPlainObject(x))
+    for (let k in x) {
       path.push(k)
-      iterate(inst[k], cb, path)
+      iterate(x[k], cb, path)
       path.pop()
     }
 }
 
-export function iteratePrimitivesOrEmpty(inst, cb, path = []) {
-  if (Array.isArray(inst)) {
-    if (!inst.length) cb(inst, path)
+export function iteratePrimitivesOrEmpty(x, cb, path = []) {
+  if (Array.isArray(x)) {
+    if (!x.length) cb(x, path)
     else
-      for (let i = 0; i < inst.length; i++) {
+      for (let i = 0; i < x.length; i++) {
         path.push(i)
-        iteratePrimitivesOrEmpty(inst[i], cb, path)
+        iteratePrimitivesOrEmpty(x[i], cb, path)
         path.pop()
       }
-  } else if (isPlainObject(inst)) {
-    if (!Object.keys(inst).length) cb(inst, path)
+  } else if (isPlainObject(x)) {
+    if (!Object.keys(x).length) cb(x, path)
     else
-      for (let k in inst) {
+      for (let k in x) {
         path.push(k)
-        iteratePrimitivesOrEmpty(inst[k], cb, path)
+        iteratePrimitivesOrEmpty(x[k], cb, path)
         path.pop()
       }
-  } else cb(inst, path)
+  } else cb(x, path)
+}
+
+export function copy(x) {
+  if (Array.isArray(x)) return x.map(copy)
+  if (isPlainObject(x)) {
+    const y = {}
+    for (let k in x) y[k] = copy(x[k])
+    return y
+  }
+  return x
 }

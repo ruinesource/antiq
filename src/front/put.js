@@ -6,104 +6,16 @@ import {
   isPlainObject,
   set,
   getPath,
+  copy,
+  isDoor,
 } from '../utils.js'
 import g from '../g.js'
-
-// строим граф
-// подписываемся на изменение сущностей
-
-// рекурсий нет
-// !(сделать и удалить) может придти id
-
-// отношения родитель-потомок по normId
-
-// сохраняем значение до put
-// удаляем его на success бэка
-// подставляем при ошибке после revert ивента
-
-// каждый ивент создаёт симулированный мир изменений
-// изменения, которые он несёт + предыдущее до него состояние (для отладки, отмены и пр)
-// предыдущее состояние может быть из симулированного мира другого ивента
-
-// эти изменения пополняются в начале ивента
-// и заполняются до конца и применяются на ответ сервера
-// есть очередь ивентов, у них есть загрузка
-// ивент имеет полную информацию в момент ответа от сервера
-// очередь ивентов очищается
-
-// на put мы смотрим связанные сущности
-// в симулированном мире, к которому подключены хуки, их изменяем
-
-// первым делом, проверяем есть ли у сущности id
-// если нет, то создаём
-
-// computed массив по флагу(условию)
-// сервер смотрит, нужно ли уведомлять
-// фронт смотрит, может ли показать изменения без отправки на сервер
-
-// .get() -> merge(value, updates)
-
-// addedRelations, removedRelations
 
 // сущности все мутируются из put и создаются только один раз
 // но мутировать их самостоятельно бессмысленно
 // к системе привязан сам метод put
-// и в массивах хранятся в своими экземплярами
+// в массивах хранятся экземпляры
 // а не айди
-
-export function put(doorName, diff, opts) {
-  const { currentEvent: event } = g
-  const wasNotSended = !g.listner[event.id]
-  ++event.count
-
-  let id = diff.id || Math.random()
-  const hasNoId = !diff.id
-  const date = Date.now()
-
-  const nId = normId(doorName, id)
-  const value = g.values[nId] || (g.values[nId] = {})
-  const val = g.vals[nId] || (g.vals[nId] = {})
-  const updated_at =
-    g.updated_at[nId] || (g.updated_at[nId] = { val: -Infinity, value: {} })
-
-  if (event.results[event.count]) {
-    const itemFromServer = event.results[event.count]
-    iteratePrimitivesOrEmpty(itemFromServer, (inst, path) => {
-      set(value, path, inst)
-      if (getPath(val, path.slice(0, -1))) set(val, path, inst)
-      set(updated_at.value, path, date)
-    })
-    rerenderBounded(doorName, nId)
-    return value
-  } else {
-    // сохраняем diff во временное хранилище
-    // ререндерим связанные get
-    addPutOptimisticUpdate(nId, { ...diff, id })
-    rerenderBounded(doorName, nId)
-  }
-
-  // отмена изменений на ошибке
-  if (wasNotSended)
-    sendEvent({
-      event,
-      onSuccess() {
-        const itemFromServer = event.results[event.count]
-
-        updated_at.val = itemFromServer.updated_at
-        delete itemFromServer.updated_at
-
-        for (let k in itemFromServer) {
-          val[k] = itemFromServer[k]
-          updated_at.value[k] = updated_at.val
-        }
-      },
-      // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
-      // нужно применять изменения сразу, сохраняя предыдущие значения
-      // в случае ошибки даём возможность предыдущие значения вернуть
-    })
-
-  return value
-}
 
 // корневая сущность и отображаемая
 // у корневой есть дата последнего изменения на сервере, она всегда приходит и записывается для всех полей
@@ -128,19 +40,88 @@ export function put(doorName, diff, opts) {
 // на put и get мы создаём поключение к каждому связанному полю сущности
 // при изменении полей всегда приходит дата запоминания в дб
 
+export function put(doorName, diff, opts) {
+  const { currentEvent: event } = g
+  ++event.count
+
+  let id = diff.id || Math.random()
+  const nId = normId(doorName, id)
+
+  if (!g.updated_at[nId]) g.updated_at[nId] = { val: new Date(0), value: {} }
+  if (!g.val[nId]) g.val[nId] = {}
+  const value = g.value[nId] || (g.value[nId] = {})
+
+  if (event.results[event.count]) {
+    putFromResults(nId)
+
+    rerenderBounded(doorName, nId)
+    return value
+  }
+
+  // сохраняем diff во временное хранилище
+  // ререндерим связанные get
+  optimisticPut(doorName, { ...diff, id })
+  rerenderBounded(doorName, nId)
+
+  // отмена изменений на ошибке
+  const wasNotSended = !g.listner[event.id]
+  if (wasNotSended)
+    sendEvent({
+      event,
+      onSuccess() {
+        console.log(copy(g))
+        putFromResults(nId)
+      },
+      // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
+      // нужно применять изменения сразу, сохраняя предыдущие значения
+      // в случае ошибки даём возможность предыдущие значения вернуть
+    })
+
+  console.log(copy(g))
+
+  return value
+}
+
 function rerenderBounded(doorName, nextValue) {}
 
-function addPutOptimisticUpdate(nId, diff, value) {
-  const updated_at = Date.now()
+function optimisticPut(doorName, diff) {
+  const desc = g.desc[doorName]
+  const nId = normId(doorName, diff.id)
+  const updated_at = new Date()
 
   iteratePrimitivesOrEmpty(diff, (inst, path) => {
-    set(g.values[nId], path, inst)
+    const pathDesc = getPath(desc, path)
+
+    if (isDoor(pathDesc))
+      set(g.parents, [normId(pathDesc.name, inst), ...path], nId)
+
+    set(g.value[nId], path, inst)
     set(g.updated_at[nId].value, path, updated_at)
   })
 }
 
-function applyPutUpdate(nId, idx) {
-  const { currentEvent: event } = g
+function putFromResults(prevNId) {
+  const { doorName, results, count } = g.currentEvent
+  const { desc } = g.door[doorName]
+  const diff = results[count]
+  const updated_at = g.updated_at[prevNId]
+
+  updated_at.val = new Date(diff.updated_at)
+  delete diff.updated_at
+
+  iteratePrimitivesOrEmpty(diff, (x, path) => {
+    set(g.val[prevNId], path, x)
+
+    const upd_at = getPath(updated_at.value, path) || new Date(0)
+    if (upd_at < updated_at.val) set(g.value[prevNId], path, x)
+
+    // при различии prev и normId перенести всё из одного в другое
+    const pathDesc = getPath(desc, path)
+    if (isDoor(pathDesc))
+      set(g.parents, [prevNId, ...path], normId(pathDesc.name, x))
+
+    set(updated_at.value, path, updated_at.val)
+  })
 }
 
 function clearPutUpdate(nId, diff) {}

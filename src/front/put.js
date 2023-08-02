@@ -41,18 +41,18 @@ import g from '../g.js'
 // при изменении полей всегда приходит дата запоминания в дб
 
 export function put(doorName, diff, opts) {
-  const { currentEvent: event } = g
-  ++event.count
+  ++g.currentEvent.count
+  const { id: eventId, results, count } = g.currentEvent
 
-  let id = diff.id || Math.random()
+  let id = diff.id || Math.random() // Symbol()?
   const nId = normId(doorName, id)
 
   if (!g.updated_at[nId]) g.updated_at[nId] = { val: new Date(0), value: {} }
   if (!g.val[nId]) g.val[nId] = {}
   const value = g.value[nId] || (g.value[nId] = {})
 
-  if (event.results[event.count]) {
-    putFromResults(nId)
+  if (results[count]) {
+    putFromResults(doorName, results[count])
 
     rerenderBounded(doorName, nId)
     return value
@@ -60,17 +60,17 @@ export function put(doorName, diff, opts) {
 
   // сохраняем diff во временное хранилище
   // ререндерим связанные get
-  optimisticPut(doorName, { ...diff, id })
+  optimisticPut(doorName, nId, diff)
   rerenderBounded(doorName, nId)
 
   // отмена изменений на ошибке
-  const wasNotSended = !g.listner[event.id]
+  const wasNotSended = !g.listner[eventId]
   if (wasNotSended)
     sendEvent({
-      event,
+      event: g.currentEvent,
       onSuccess() {
-        console.log(copy(g))
-        putFromResults(nId)
+        putFromResults(doorName, results[count])
+        if (!diff.id) replaceMockId(doorName, diff.id)
       },
       // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
       // нужно применять изменения сразу, сохраняя предыдущие значения
@@ -84,44 +84,97 @@ export function put(doorName, diff, opts) {
 
 function rerenderBounded(doorName, nextValue) {}
 
-function optimisticPut(doorName, diff) {
+function optimisticPut(doorName, nId, diff) {
   const desc = g.desc[doorName]
-  const nId = normId(doorName, diff.id)
-  const updated_at = new Date()
+  const now = new Date()
 
   iteratePrimitivesOrEmpty(diff, (inst, path) => {
-    const pathDesc = getPath(desc, path)
+    const childDesc = getPath(desc, path)
 
-    if (isDoor(pathDesc))
-      set(g.parents, [normId(pathDesc.name, inst), ...path], nId)
+    if (isDoor(childDesc)) addRelation(nId, normId(childDesc.name, inst))
 
     set(g.value[nId], path, inst)
-    set(g.updated_at[nId].value, path, updated_at)
+    set(g.updated_at[nId].value, path, now)
   })
 }
 
-function putFromResults(prevNId) {
-  const { doorName, results, count } = g.currentEvent
+function putFromResults(doorName, diff) {
+  const nId = normId(doorName, diff.id)
   const { desc } = g.door[doorName]
-  const diff = results[count]
-  const updated_at = g.updated_at[prevNId]
+  const updated_at = g.updated_at[nId]
 
   updated_at.val = new Date(diff.updated_at)
   delete diff.updated_at
 
   iteratePrimitivesOrEmpty(diff, (x, path) => {
-    set(g.val[prevNId], path, x)
+    set(g.val[nId], path, x)
 
     const upd_at = getPath(updated_at.value, path) || new Date(0)
-    if (upd_at < updated_at.val) set(g.value[prevNId], path, x)
+    if (upd_at < updated_at.val) set(g.value[nId], path, x)
 
-    // при различии prev и normId перенести всё из одного в другое
-    const pathDesc = getPath(desc, path)
-    if (isDoor(pathDesc))
-      set(g.parents, [prevNId, ...path], normId(pathDesc.name, x))
+    // при различии prev и nId перенести всё из одного в другое
+    const childDesc = getPath(desc, path)
+    if (isDoor(childDesc)) addRelation(nId, normId(childDesc.name, x))
 
     set(updated_at.value, path, updated_at.val)
   })
 }
 
-function clearPutUpdate(nId, diff) {}
+function cancelOptimisticPut(doorName, id) {
+  const desc = g.desc[doorName]
+  const nId = normId(doorName, id)
+  const value = g.value[nId]
+  const val = g.val[nId]
+  const updated_at = g.updated_at[nId]
+  const now = new Date()
+
+  if (!val) delete g.value[nId]
+  else
+    iteratePrimitivesOrEmpty(val, (inst, path) => {
+      const childDesc = getPath(desc, path)
+
+      if (isDoor(childDesc)) removeRelation(nId, normId(childDesc.name, inst))
+
+      set(value, path, inst)
+      set(updated_at.value, path, now)
+    })
+}
+
+function replaceMockId(doorName, mockId, id) {
+  const mockNId = normId(doorName, mockId)
+  const nId = normId(doorName, id)
+  g.values[nId].id = id
+
+  const x = (k) => {
+    g[k][nId] = g[k][mockNId]
+    delete g[k][mockNId]
+  }
+  x('value')
+  x('updated_at')
+  x('parents')
+  x('childs')
+
+  const y = (k) => {
+    for (let kNId in g[k]) {
+      const val = g[k][kNId]
+      if (val[mockNId]) {
+        val[nId] = val[mockNId]
+        delete val[mockNId]
+      }
+    }
+  }
+  y('parents')
+  y('childs')
+}
+
+function addRelation(parentNId, path, childNId) {
+  set(g.parents, [childNId, parentNId, ...path], true)
+  set(g.childs, [parentNId, childNId, ...path], true)
+}
+
+function removeRelation(parentNId, childNId) {
+  delete g.parents[childNId][parentNId]
+  delete g.childs[parentNId][childNId]
+  if (!Object.keys(g.childs[parentNId].length)) delete g.childs[parentNId]
+  if (!Object.keys(g.parents[childNId].length)) delete g.parents[childNId]
+}

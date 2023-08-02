@@ -30,14 +30,15 @@ const g = {
 
   // при удалении идём по родителям и ставим null
   // массивы фильтруем
-  parents: {}, // nId: parentNormId: { ...path: true }
+  parents: {}, // nId: parentNId: { ...pathToChild: true }
+  childs: {}, // nId: childId: { ...pathToChild: true }
 
   // при обновлении обновляем все геттеры, экшны в которых вернули сущность
-  // normIdEvents: {}, // nId: door: getApiName: eventArgsKey: [...actionResultIdx]
+  // nIdEvents: {}, // nId: door: getApiName: eventArgsKey: [...actionResultIdx]
 
   // при удалении удаляем в массивах
   // при изменении идём по get-массивам и проверяем, выполняется ли условие query
-  // normIdActions: {}, // nId: { door: { getActionArgs: { ...pathsToInst } } }
+  // nIdActions: {}, // nId: { door: { getActionArgs: { ...pathsToInst } } }
 
   listner: {}, // eventId: onSuccess
   promise: {}, // door: getterName: argsKey: promise/result

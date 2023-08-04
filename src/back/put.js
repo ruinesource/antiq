@@ -22,8 +22,9 @@ export async function put(name, diff) {
     diff,
     desc
   )
+  console.log(queries.map((q) => q.type(...q.args)))
   await execQueries(queries, delayedIds)
-  await delay(5000)
+  // await delay(5000)
 
   return tableDiff
 }

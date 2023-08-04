@@ -44,12 +44,16 @@ const { bookD } = open(hotel)
 // bookD.x().then((res) => console.log(res))
 // bookD.y().then((res) => console.log(res))
 
-bookD.upd({ id: 17, team_member: 8 }).then((e) => {
-  console.log('upd', e)
-})
-bookD.one(17).then((e) => {
-  console.log('one', e)
-})
+// bookD.upd({ id: 17, team_member: 8 }).then((e) => {
+//   console.log('upd', e)
+// })
+// bookD.one(17).then((e) => {
+//   console.log('one', e)
+// })
+
+window.p = () => {
+  bookD.upd({ team_member: 8 })
+}
 
 // upd пока не пришел ответ от предыдущего
 // загрузка

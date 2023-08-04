@@ -19,23 +19,10 @@ import {
 
 // на одно свойство может потребоваться несколько сравнений (и/или)
 
-// структура экшна
-// { t: type, i: eventId, a: args }
-
-// структура ответа
-// {
-//   v: { door: { id: deepValuesWithoutDoors } },
-//   i: eventId
-// }
-
-// на сервере мы выполняем метод
-// запускаем выполнение и чё
-// смотрим, какие ивенты задействованы (может быть асинхронное)
-// результаты записываем в eventId: [updates]
-
 export async function get(name, id, opts) {
   const { currentEvent: event } = g
   ++event.count
+  const { count, results } = event
 
   // здесь если сущность уже есть на фронте со всеми полями
   // возвращаем её даже без промиса, синхронным кодом
@@ -45,28 +32,31 @@ export async function get(name, id, opts) {
   // поэтому для оптимизации рендера используем omit и select апи, а не хуки
 
   const nId = normId(name, id)
+  if (!g.val[nId]) g.val[nId] = {}
+  if (!g.updated_at[nId]) g.updated_at[nId] = { val: new Date(0), value: {} }
 
   if (g.value[nId]) {
-    if (!event.results[event.count]) event.results.push(g.value[nId])
+    if (!results[count]) results.push(g.value[nId])
 
     return g.value[nId]
   }
+  if (!g.value[nId]) g.value[nId] = {}
 
   // results для автоматического сета на фронт
   // results посчитанное на фронте и не требующее отправки на сервер
 
-  if (event.results[event.count]) return getFromResults()
+  if (results[count]) return getFromResults(count)
 
   return sendEvent({
     event,
-    onSuccess: getFromResults,
+    onSuccess: () => getFromResults(count),
   })
 }
 
-function getFromResults() {
-  const { doorName, results, count } = g.currentEvent
+function getFromResults(actionCount) {
+  const { doorName, results } = g.currentEvent
   const { desc } = g.door[doorName]
-  const item = results[count]
+  const item = results[actionCount]
   const nId = normId(doorName, item.id)
   const updated_at = g.updated_at[nId]
 
@@ -88,4 +78,6 @@ function getFromResults() {
 
     set(updated_at.value, path, updated_at.val)
   })
+
+  return g.value[nId]
 }

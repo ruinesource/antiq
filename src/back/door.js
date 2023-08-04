@@ -58,6 +58,7 @@ function event(door, apiFn, apiName) {
       result = await apiFn(...args)
     } catch (e) {
       console.log(e)
+      throw e
     }
 
     return result

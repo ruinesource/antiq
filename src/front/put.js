@@ -74,6 +74,13 @@ export function put(doorName, diff, opts) {
     sendEvent({
       event: g.currentEvent,
       onSuccess() {
+        // put по идее совсем ничего не меняет
+        // он только добавляет id на создание сущности
+        // перемены интерфейса не нужны
+        // только loading состояние
+        // и изменения на receive
+        // сам id мы и так получаем свежий во всех функциях
+        // ...или нет, если деструктурировали в теле компонента
         putFromResults(doorName, count, nId)
         if (!diff.id) removeMock(doorName, nId)
       },
@@ -103,7 +110,6 @@ function optimisticPut(doorName, nId, diff) {
 
 function putFromResults(doorName, actionCount, prevNId) {
   const diff = g.currentEvent.results[actionCount]
-  // console.log(g, g.currentEvent.results[actionCount], g.currentEvent)
   const nId = normId(doorName, diff.id)
   const desc = g.desc[doorName]
 
@@ -122,9 +128,7 @@ function putFromResults(doorName, actionCount, prevNId) {
     if (upd_at < updated_at.val) set(g.value[nId], path, x)
 
     const childDesc = getPath(desc, path)
-    console.log(childDesc, desc, path)
     if (isDoor(childDesc)) {
-      console.log('relation', nId, path, normId(childDesc.name, x))
       addRelation(nId, path, normId(childDesc.name, x))
     }
 
@@ -156,17 +160,13 @@ function removeMock(doorName, mockNId) {
   delete g.val[mockNId]
   delete g.value[mockNId]
   delete g.updated_at[mockNId]
-
   delete g.parents[mockNId]
   delete g.childs[mockNId]
-
   deleteSecondLevel('parents')
   deleteSecondLevel('childs')
 
   function deleteSecondLevel(k) {
-    for (const id in g[k]) {
-      delete g[k][id][mockNId]
-    }
+    for (const nId in g[k]) delete g[k][nId][mockNId]
   }
 }
 

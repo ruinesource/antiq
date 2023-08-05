@@ -42,24 +42,25 @@ import g from '../g.js'
 
 // !!!!!!!!! при изменении child_db в door нужно менять updated_at у бд самой door !!!!!!!!!
 
+// копить обновления до получения id
+
 export function put(doorName, diff, opts) {
   ++g.currentEvent.count
   const { id: eventId, count, results } = g.currentEvent
 
-  let id = diff.id || Math.random() // Symbol()?
-  const nId = normId(doorName, id)
-  console.log(copy(g))
-
-  if (!g.updated_at[nId]) g.updated_at[nId] = { val: new Date(0), value: {} }
-  if (!g.val[nId]) g.val[nId] = {}
-  const value = g.value[nId] || (g.value[nId] = {})
-
   if (results[count]) {
-    putFromResults(doorName, count)
+    diff = putFromResults(doorName, count)
+    const nId = normId(doorName, diff.id)
 
     rerenderBounded(doorName, nId)
-    return value
+    return g.value[nId]
   }
+
+  let id = diff.id || Math.random() // Symbol()?
+  const nId = normId(doorName, id)
+
+  if (!g.updated_at[nId]) g.updated_at[nId] = { val: new Date(0), value: {} }
+  const value = g.value[nId] || (g.value[nId] = {})
 
   // сохраняем diff во временное хранилище
   // ререндерим связанные get
@@ -68,15 +69,13 @@ export function put(doorName, diff, opts) {
 
   // отмена изменений на ошибке
   const wasNotSended = !g.listner[eventId]
-  console.log(copy(g))
+
   if (wasNotSended)
     sendEvent({
       event: g.currentEvent,
       onSuccess() {
-        putFromResults(doorName, count)
-        if (!diff.id)
-          replaceMockId(doorName, id, g.currentEvent.results[count].id)
-        // console.log(copy(g))
+        putFromResults(doorName, count, nId)
+        if (!diff.id) removeMock(doorName, nId)
       },
       // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
       // нужно применять изменения сразу, сохраняя предыдущие значения
@@ -95,24 +94,22 @@ function optimisticPut(doorName, nId, diff) {
   iteratePrimitivesOrEmpty(diff, (x, path) => {
     const childDesc = getPath(desc, path)
 
-    if (isDoor(childDesc)) {
-      addRelation(nId, path, normId(childDesc.name, x))
-    }
+    if (isDoor(childDesc)) addRelation(nId, path, normId(childDesc.name, x))
 
     set(g.value[nId], path, x)
     set(g.updated_at[nId].value, path, now)
   })
 }
 
-function putFromResults(doorName, actionCount) {
+function putFromResults(doorName, actionCount, prevNId) {
   const diff = g.currentEvent.results[actionCount]
-  console.log(g.currentEvent.results[actionCount], g.currentEvent)
+  // console.log(g, g.currentEvent.results[actionCount], g.currentEvent)
   const nId = normId(doorName, diff.id)
-  const { desc } = g.door[doorName]
+  const desc = g.desc[doorName]
 
   if (!g.updated_at[nId]) g.updated_at[nId] = { val: new Date(0), value: {} }
-  if (!g.val[nId]) g.val[nId] = {}
-  if (!g.value[nId]) g.value[nId] = {}
+  if (!g.val[nId]) g.val[nId] = g.val[prevNId] ? g.val[prevNId] : {}
+  if (!g.value[nId]) g.value[nId] = g.value[prevNId] ? g.value[prevNId] : {}
   const updated_at = g.updated_at[nId]
 
   updated_at.val = new Date(diff.updated_at)
@@ -124,9 +121,12 @@ function putFromResults(doorName, actionCount) {
     const upd_at = getPath(updated_at.value, path) || new Date(0)
     if (upd_at < updated_at.val) set(g.value[nId], path, x)
 
-    // при различии prev и nId перенести всё из одного в другое
     const childDesc = getPath(desc, path)
-    if (isDoor(childDesc)) addRelation(nId, path, normId(childDesc.name, x))
+    console.log(childDesc, desc, path)
+    if (isDoor(childDesc)) {
+      console.log('relation', nId, path, normId(childDesc.name, x))
+      addRelation(nId, path, normId(childDesc.name, x))
+    }
 
     set(updated_at.value, path, updated_at.val)
   })
@@ -152,32 +152,22 @@ function cancelOptimisticPut(doorName, id) {
     })
 }
 
-function replaceMockId(doorName, mockId, id) {
-  const mockNId = normId(doorName, mockId)
-  const nId = normId(doorName, id)
-  console.log(doorName, mockId, id)
-  g.value[nId].id = id
+function removeMock(doorName, mockNId) {
+  delete g.val[mockNId]
+  delete g.value[mockNId]
+  delete g.updated_at[mockNId]
 
-  const x = (k) => {
-    g[k][nId] = g[k][mockNId]
-    delete g[k][mockNId]
-  }
-  x('value')
-  x('updated_at')
-  x('parents')
-  x('childs')
+  delete g.parents[mockNId]
+  delete g.childs[mockNId]
 
-  const y = (k) => {
-    for (let kNId in g[k]) {
-      const val = g[k][kNId]
-      if (val[mockNId]) {
-        val[nId] = val[mockNId]
-        delete val[mockNId]
-      }
+  deleteSecondLevel('parents')
+  deleteSecondLevel('childs')
+
+  function deleteSecondLevel(k) {
+    for (const id in g[k]) {
+      delete g[k][id][mockNId]
     }
   }
-  y('parents')
-  y('childs')
 }
 
 function addRelation(parentNId, path, childNId) {

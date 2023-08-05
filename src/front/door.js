@@ -10,7 +10,6 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
     name,
   })
   g.desc[name] = descFunc
-  g.value[name] = {}
   g.promise[name] = {}
 
   for (let k in getters) {

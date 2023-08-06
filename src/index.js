@@ -2,6 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import hotel from './hotel.js'
 import { open } from './front/ws.js'
+import { copy } from './utils.js'
+import g from './g.js'
 
 function App() {
   // useD(bookD.one, 17)
@@ -37,23 +39,32 @@ const { bookD } = open(hotel)
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // bookD.x().then((res) => {
-//   console.log(res)
-//
+// из этого get понятно
+// какие сущности в нём получаются
+// если происходит bookD.get(id) этой сущности
+// то запрос не делаем
+// а только
+
 //   bookD.x().then((res) => console.log(res))
 // })
-// bookD.x().then((res) => console.log(res))
-// bookD.y().then((res) => console.log(res))
 
-// bookD.upd({ id: 17, team_member: 8 }).then((e) => {
-//   console.log('upd', e)
-// })
+// g.promises.book.x[argsKey] = promise->getterResult
+
+bookD.x().then(() => console.log(3, copy(g)))
+// bookD.y().then((res) => console.log(res))
+console.log(1, copy(g))
+
+bookD.upd({ id: 17, deep: { ea: 'oki' } }).then((e) => {
+  console.log(4, copy(g))
+})
+console.log(2, copy(g))
 // bookD.one(17).then((e) => {
 //   console.log('one', e)
 // })
 
-window.p = () => {
-  bookD.upd({ team_member: 8 })
-}
+// window.p = () => {
+//   bookD.upd({ team_member: 8 })
+// }
 
 // upd пока не пришел ответ от предыдущего
 // загрузка

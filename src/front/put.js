@@ -1,14 +1,13 @@
 import { sendEvent } from './ws.js'
 import {
   normId,
-  iterate,
   iteratePrimitivesOrEmpty,
-  isPlainObject,
   set,
   getPath,
-  copy,
   isDoor,
+  copy,
 } from '../utils.js'
+import { addRelation, removeRelation } from './relations.js'
 import g from '../g.js'
 
 // сущности все мутируются из put и создаются только один раз
@@ -117,22 +116,21 @@ function putFromResults(doorName, actionCount, prevNId) {
   if (!g.val[nId]) g.val[nId] = g.val[prevNId] ? g.val[prevNId] : {}
   if (!g.value[nId]) g.value[nId] = g.value[prevNId] ? g.value[prevNId] : {}
   const updated_at = g.updated_at[nId]
+  const diffUpd = new Date(diff.updated_at)
 
-  updated_at.val = new Date(diff.updated_at)
+  if (diffUpd > updated_at.val) updated_at.val = diffUpd
   delete diff.updated_at
 
   iteratePrimitivesOrEmpty(diff, (x, path) => {
-    set(g.val[nId], path, x)
-
-    const upd_at = getPath(updated_at.value, path) || new Date(0)
-    if (upd_at < updated_at.val) set(g.value[nId], path, x)
-
-    const childDesc = getPath(desc, path)
-    if (isDoor(childDesc)) {
-      addRelation(nId, path, normId(childDesc.name, x))
+    const upd_at = getPath(updated_at.value, path) || 0
+    if (diffUpd >= upd_at) {
+      set(g.val[nId], path, x)
+      set(g.value[nId], path, x)
+      set(updated_at.value, path, diffUpd)
     }
 
-    set(updated_at.value, path, updated_at.val)
+    const childDesc = getPath(desc, path)
+    if (isDoor(childDesc)) addRelation(nId, path, normId(childDesc.name, x))
   })
 }
 
@@ -142,17 +140,15 @@ function cancelOptimisticPut(doorName, id) {
   const value = g.value[nId]
   const val = g.val[nId]
   const updated_at = g.updated_at[nId]
-  const now = new Date()
 
   if (!val) delete g.value[nId]
   else
     iteratePrimitivesOrEmpty(val, (inst, path) => {
-      const childDesc = getPath(desc, path)
-
-      if (isDoor(childDesc)) removeRelation(nId, normId(childDesc.name, inst))
-
       set(value, path, inst)
-      set(updated_at.value, path, now)
+      set(updated_at.value, path, updated_at.val)
+
+      const childDesc = getPath(desc, path)
+      if (isDoor(childDesc)) removeRelation(nId, normId(childDesc.name, inst))
     })
 }
 
@@ -168,16 +164,4 @@ function removeMock(doorName, mockNId) {
   function deleteSecondLevel(k) {
     for (const nId in g[k]) delete g[k][nId][mockNId]
   }
-}
-
-function addRelation(parentNId, path, childNId) {
-  set(g.parents, [childNId, parentNId, ...path], true)
-  set(g.childs, [parentNId, childNId, ...path], true)
-}
-
-function removeRelation(parentNId, childNId) {
-  delete g.parents[childNId][parentNId]
-  delete g.childs[parentNId][childNId]
-  if (!Object.keys(g.childs[parentNId].length)) delete g.childs[parentNId]
-  if (!Object.keys(g.parents[childNId].length)) delete g.parents[childNId]
 }

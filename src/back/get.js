@@ -52,6 +52,11 @@ async function getItem(name, id, door, desc) {
       await getItem(childName, inst[key])
     } else if (isPlainObject(desc[key])) {
       inst[key] = await getItem(`${name}_${key}`, id, door, desc[key])
+      if (pk === door) {
+        delete inst[pk]
+        delete inst.created_at
+        delete inst.updated_at
+      }
     }
   }
   return inst

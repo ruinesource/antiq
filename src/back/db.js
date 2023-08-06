@@ -1,5 +1,7 @@
 import pg from 'pg'
 
+pg.types.setTypeParser(1114, (x) => x)
+
 let client = null
 
 export async function db() {

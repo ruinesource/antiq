@@ -35,13 +35,13 @@ export default function hotel(door) {
       x: async () => {
         const first = await bookD.get(17)
         const second = await bookD.get(18)
-        return [first, second]
+        return { first, second }
       },
 
       y: async () => {
         const first = await bookD.get(19)
         const second = await bookD.get(20)
-        return [first, second]
+        return { first, second }
       },
 
       one: async (id) => {
@@ -60,7 +60,6 @@ export default function hotel(door) {
 
         const book = await bookD.get(id)
 
-        // console.log(id, book)
         // можем ли мы в асинхронный поток перед конкретным событием задать переменную?
         // обернуть выполнение кода события, поставив микротаск в очередь перед микротаском события
 
@@ -175,12 +174,11 @@ export default function hotel(door) {
       },
 
       add: async () => {
-        const book = bookD.put({
+        const book = await bookD.put({
           team_member: null,
           authors: [],
           deep: { ea: 'valDeep', very: { ea: 'valVery' } },
         })
-        console.log('book')
         return book
       },
     }

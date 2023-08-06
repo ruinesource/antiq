@@ -3,12 +3,14 @@ import g from '../g.js'
 import {
   getPath,
   set,
+  copy,
   argsKey,
   iteratePrimitivesOrEmpty,
   isPlainObject,
   isDoor,
   normId,
 } from '../utils.js'
+import { addRelation } from './relations.js'
 
 // i eventId
 // d door
@@ -66,18 +68,19 @@ function getFromResults(actionCount) {
   const item = results[actionCount]
   const nId = normId(doorName, item.id)
   const updated_at = g.updated_at[nId]
+  const itemUpd = new Date(item.updated_at)
 
-  updated_at.val =
-    new Date(item.updated_at) > updated_at.val
-      ? new Date(item.updated_at)
-      : updated_at.val
+  if (itemUpd > updated_at.val) updated_at.val = itemUpd
+  // иначе можем ничего не делать?
   delete item.updated_at
 
   iteratePrimitivesOrEmpty(item, (x, path) => {
-    set(g.val[nId], path, x)
-
-    const upd_at = getPath(updated_at.value, path) || new Date(0)
-    if (upd_at < updated_at.val) set(g.value[nId], path, x)
+    const upd_at = getPath(updated_at.value, path) || 0
+    if (itemUpd >= upd_at) {
+      set(g.val[nId], path, x)
+      set(g.value[nId], path, x)
+      set(updated_at.value, path, itemUpd)
+    }
 
     const pathDesc = getPath(desc, path)
     if (isDoor(pathDesc))

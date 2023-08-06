@@ -131,15 +131,15 @@ function event(door, apiFn, apiName, isSetter) {
 
     let result
     try {
-      result = await apiFn(...args)
+      const promise = apiFn(...args)
 
-      if (!isSetter)
-        set(g.promise, [door.name, apiName, argsKey, 'event'], {
-          result,
-          event,
-        })
+      if (!isSetter) set(g.promise, [door.name, apiName, argsKey], promise)
+
+      result = await promise
     } catch (e) {
       console.log(e)
+    } finally {
+      if (!isSetter) delete g.promise[door.name][apiName][argsKey]
     }
 
     return result

@@ -22,11 +22,11 @@ export async function put(name, diff) {
     diff,
     desc
   )
-  console.log(queries.map((q) => q.type(...q.args)))
+
   await execQueries(queries, delayedIds)
   // await delay(5000)
 
-  return tableDiff
+  return { ...diff, ...tableDiff }
 }
 
 function delay(ms) {
@@ -48,24 +48,29 @@ async function setPutVars(
 
   // дата updated_at устанавливается раньше, чем объект устанавливается в таблицу
   // перенести это в момент выполнения query
-  const tableDiff =
-    tableName === doorName ? { updated_at: new Date().toISOString() } : {}
+  const isParentDiff = tableName === doorName
+  const tableDiff = isParentDiff ? { updated_at: new Date().toISOString() } : {}
+  const parentId = parentQuery?.args?.[1]?.id
+
+  const pk = tableName === path.join() ? 'id' : doorName
 
   // query: { diff, key }
   // при выполнении этого квери следует подставить сгенеренный id в родительский diff
   const currentDelayedIds = []
   let currentItemQ
-  if (diff.id && tableName === doorName) {
+  if ((diff.id && isParentDiff) || parentId) {
     currentItemQ = await sql(
-      `select * from ${tableName} where id = ${diff.id};`
+      `select * from ${tableName} where ${pk} = ${
+        isParentDiff ? diff.id : parentId
+      };`
     )
-    tableDiff.id = currentItemQ.rows[0]?.id
+    tableDiff[pk] = currentItemQ.rows[0]?.[pk]
   }
   const query = {
     type: currentItemQ?.rowCount ? updateItem : addItem,
-    args: [tableName, tableDiff, tableName === path.join() ? 'id' : doorName],
+    args: [tableName, tableDiff, pk],
   }
-  if (tableName === doorName) {
+  if (isParentDiff) {
     parentQuery = query
     delayedIds.set(query, [])
     if (!diff.id) {
@@ -279,13 +284,13 @@ function setPutArrayVars(doorName, path, diff, desc, queries, delayedIds) {
   }
 }
 
-export const updateItem = (tableName, diff) => `
+export const updateItem = (tableName, diff, pk) => `
   update ${quot(tableName)}
   set ${Object.entries(diff || {})
-    .filter(([key]) => key !== 'id')
+    .filter(([key]) => key !== pk)
     .map((item) => `${item[0]} = ${sqlQuotes(item[1])}`)
     .join(', ')}
-  where id = ${diff.id} returning id;
+  where ${pk} = ${diff[pk]} returning ${pk};
 `
 
 export const addItems = (tableName, { fields, values }) =>

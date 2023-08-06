@@ -170,7 +170,9 @@ export default function hotel(door) {
       // на фронте put синхронен
       // но всё равно ставит лоадер на ивент
       upd: async (diff) => {
-        return bookD.put(diff)
+        await bookD.get(17)
+        const book = await bookD.put(diff)
+        return book
       },
 
       add: async () => {

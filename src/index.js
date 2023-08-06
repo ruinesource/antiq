@@ -50,14 +50,15 @@ const { bookD } = open(hotel)
 
 // g.promises.book.x[argsKey] = promise->getterResult
 
-bookD.x().then(() => console.log(3, copy(g)))
+// bookD.x().then(() => console.log(3, copy(g)))
+// bookD.x().then(() => console.log(3, copy(g)))
 // bookD.y().then((res) => console.log(res))
-console.log(1, copy(g))
+// console.log(1, copy(g))
 
-bookD.upd({ id: 17, deep: { ea: 'oki' } }).then((e) => {
-  console.log(4, copy(g))
+bookD.upd({ id: 17, deep: { ea: 'oki' } }).then((res) => {
+  console.log('after put', res, g)
 })
-console.log(2, copy(g))
+// console.log(2, copy(g))
 // bookD.one(17).then((e) => {
 //   console.log('one', e)
 // })

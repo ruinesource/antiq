@@ -48,8 +48,7 @@ export function put(doorName, diff, opts) {
   const { id: eventId, count, results } = g.currentEvent
 
   if (results[count]) {
-    diff = putFromResults(doorName, count)
-    const nId = normId(doorName, diff.id)
+    const nId = putFromResults(doorName, count)
 
     rerenderBounded(doorName, nId)
     return g.value[nId]
@@ -66,7 +65,6 @@ export function put(doorName, diff, opts) {
   optimisticPut(doorName, nId, diff)
   rerenderBounded(doorName, nId)
 
-  // отмена изменений на ошибке
   const wasNotSended = !g.listner[eventId]
 
   if (wasNotSended)
@@ -127,11 +125,13 @@ function putFromResults(doorName, actionCount, prevNId) {
       set(g.val[nId], path, x)
       set(g.value[nId], path, x)
       set(updated_at.value, path, diffUpd)
-    }
 
-    const childDesc = getPath(desc, path)
-    if (isDoor(childDesc)) addRelation(nId, path, normId(childDesc.name, x))
+      const childDesc = getPath(desc, path)
+      if (isDoor(childDesc)) addRelation(nId, path, normId(childDesc.name, x))
+    }
   })
+
+  return nId
 }
 
 function cancelOptimisticPut(doorName, id) {

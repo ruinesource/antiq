@@ -3,7 +3,9 @@ import { set } from '../utils.js'
 
 export function addRelation(parentNId, path, childNId) {
   set(g.parents, [childNId, parentNId, ...path], true)
-  set(g.childs, [parentNId, childNId, ...path], true)
+  const relation = g.parents[childNId][parentNId]
+
+  set(g.childs, [parentNId, childNId], relation)
 }
 
 export function removeRelation(parentNId, childNId) {

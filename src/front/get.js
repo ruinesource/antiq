@@ -64,7 +64,7 @@ export async function get(name, id, opts) {
 
 function getFromResults(actionCount) {
   const { doorName, results } = g.currentEvent
-  const { desc } = g.door[doorName]
+  const desc = g.desc[doorName]
   const item = results[actionCount]
   const nId = normId(doorName, item.id)
   const updated_at = g.updated_at[nId]
@@ -80,11 +80,11 @@ function getFromResults(actionCount) {
       set(g.val[nId], path, x)
       set(g.value[nId], path, x)
       set(updated_at.value, path, itemUpd)
-    }
 
-    const pathDesc = getPath(desc, path)
-    if (isDoor(pathDesc))
-      set(g.parents, [nId, ...path], normId(pathDesc.name, x))
+      const pathDesc = getPath(desc, path)
+      // console.log(pathDesc, desc, do)
+      if (isDoor(pathDesc)) addRelation(nId, path, normId(pathDesc.name, x))
+    }
 
     set(updated_at.value, path, updated_at.val)
   })

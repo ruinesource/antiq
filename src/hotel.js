@@ -142,13 +142,11 @@ export default function hotel(door) {
         /*
         return authorD.get(
           {
-            id: any(
-              booksAuthorsD.s('author').out({
-                id: any(favoriteBooksD.s('id').out({
-                  user: userId
-                })),
-              })
-            ),
+            id: booksAuthorsD.s('author').out({
+              id: favoriteBooksD.s('id').out({
+                user: userId
+              }),
+            }),
           },
           { pag }
         ) */

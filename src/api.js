@@ -95,7 +95,8 @@ front(async () => {
 // get put rm
 // >, =, !=, &, |, ~
 // any, all
-// in, not in - это то же, что any =, all !=
+// in, not in - это то же, что any =
+// any(arr, '>')
 
 // элемент таблицы со свойством больше свойства другой таблицы, like "book.name"...
 // (IN с операцией вместо строгого сравнения)
@@ -118,13 +119,9 @@ front(async () => {
 // book.get([{ name: 'oki' }, { id: 'doki' }]) - or с разными свойствами
 
 // author.get({
-//   id: any(
-//     book.authors.s('id').innerGet({
-//       id: any(
-//         favoriteBooks.s('book').innerGet({ user: userId })
-//       )
-//     })
-//   )
+//   id: book.authors.s('id').out({
+//     id: favoriteBooks.s('book').out({ user: userId })
+//   })
 // })
 // author.get('(author a).id in (book.authors ba).get(ba.id )')
 

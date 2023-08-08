@@ -78,8 +78,8 @@ export function put(doorName, diff, opts) {
         // и изменения на receive
         // сам id мы и так получаем свежий во всех функциях
         // ...или нет, если деструктурировали в теле компонента
-        putFromResults(doorName, count, nId)
-        if (!diff.id) removeMock(doorName, nId)
+        // putFromResults(doorName, count, nId)
+        // if (!diff.id) removeMock(doorName, nId)
       },
       // onError() { тоже applyPutUpdate, поэтому getData будет брать данные из updates }
       // нужно применять изменения сразу, сохраняя предыдущие значения

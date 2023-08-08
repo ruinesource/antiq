@@ -19,6 +19,11 @@ export function open(hotel) {
     openingPromiseResolver.exec()
   }
 
+  // sessionId при открытии
+  // передаём с каждым ивентом
+  // на сервере записываем все используемые sessionId-normId
+  // на сеттеры смотрим, какие sessionId на них подписаны, отправляем их туда
+
   ws.onmessage = async (msg) => {
     const event = JSON.parse(msg.data)
 

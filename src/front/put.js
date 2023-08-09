@@ -105,7 +105,7 @@ function optimisticPut(doorName, nId, diff) {
   })
 }
 
-function putFromResults(doorName, actionCount, prevNId) {
+export function putFromResults(doorName, actionCount, prevNId) {
   const diff = g.currentEvent.results[actionCount]
   const nId = normId(doorName, diff.id)
   const desc = g.desc[doorName]

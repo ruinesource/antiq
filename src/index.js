@@ -58,6 +58,12 @@ const { bookD } = open(hotel)
 bookD.upd({ id: 17, deep: { ea: 'oki' } }).then((res) => {
   console.log('after put', res, g)
 })
+window.g = g
+window.k = () => {
+  bookD.upd({ id: 17, deep: { ea: 'very' } })
+  bookD.one(17).then(console.log)
+}
+
 // console.log(2, copy(g))
 // bookD.one(17).then((e) => {
 //   console.log('one', e)

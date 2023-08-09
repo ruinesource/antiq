@@ -4,7 +4,8 @@ import g from '../g.js'
 
 const wss = new ws.Server({ noServer: true })
 
-const clients = {}
+export const guests = {}
+export const guestsByNormId = {}
 
 // door -> session
 // при изменении door оповещаем все связанные сессии
@@ -16,14 +17,14 @@ http
   .listen(5588)
 
 function onSocketConnect(ws) {
-  const sessionId = Math.random()
+  const guest = Math.random()
 
-  clients[sessionId] = ws
+  guests[guest] = ws
 
   ws.send(
     JSON.stringify({
       t: 'open',
-      sessionId,
+      guest,
     })
   )
 
@@ -53,4 +54,6 @@ function onSocketConnect(ws) {
       ws.send(JSON.stringify({ id: event.id, e }))
     }
   })
+
+  ws.on('close', (...args) => console.log(args))
 }

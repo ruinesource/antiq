@@ -47,6 +47,7 @@ const g = {
   queries: {
     createTable: [],
   },
+  listners: {}, // guest: normId: ?fileds
 }
 
 export default g

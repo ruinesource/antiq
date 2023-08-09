@@ -1,8 +1,9 @@
 import g, { openingPromiseResolver } from '../g.js'
 import { door } from './door.js'
+import { putFromResults, rerenderBounded } from './put.js'
 const ws = new WebSocket('ws://localhost:5588')
 
-let sessionId
+let guest
 
 // структура запроса
 // {
@@ -14,28 +15,41 @@ let sessionId
 // структура ответа
 
 export function open(hotel) {
-  ws.onopen = () => {
-    g.opened = true
-    openingPromiseResolver.exec()
-  }
+  // ws.onopen = (e) => {
+  // }
 
-  // sessionId при открытии
+  // guest при открытии
   // передаём с каждым ивентом
-  // на сервере записываем все используемые sessionId-normId
-  // на сеттеры смотрим, какие sessionId на них подписаны, отправляем их туда
+  // на сервере записываем все используемые guest-normId
+  // на сеттеры смотрим, какие guest на них подписаны, отправляем их туда
 
   ws.onmessage = async (msg) => {
     const event = JSON.parse(msg.data)
 
-    // if (event.t === 'open') {
-    //   sessionId = event.sessionId
-    //   return
-    // }
+    if (event.t === 'open') {
+      g.opened = true
+      guest = event.guest
+      openingPromiseResolver.exec()
+      return
+    }
 
     if (g.listner[event.id]) {
       await g.listner[event.id](event)
       delete g.listner[event.id]
     }
+
+    if (event.t === 'put') {
+      g.currentEvent = { results: [event.diff] }
+      putFromResults(event.doorName, 0)
+      // ...rerenderBounded
+    }
+  }
+
+  ws.onclose = () => ws.close('"hard close"')
+
+  window.onbeforeunload = function () {
+    ws.onclose = function () {} // disable onclose handler first
+    ws.close('"hard close"')
   }
 
   hotel(door)
@@ -52,7 +66,9 @@ export function open(hotel) {
   return doors
 }
 
-export function sendEvent({ event, onSuccess }) {
+export async function sendEvent({ event, onSuccess }) {
+  if (!guest) await openingPromiseResolver
+  event.guest = guest
   ws.send(JSON.stringify(event))
 
   let resolve

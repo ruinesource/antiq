@@ -71,6 +71,9 @@ export function put(doorName, diff, opts) {
     sendEvent({
       event: g.currentEvent,
       onSuccess() {
+        // !!!! здесь добавить подстановку id пришедшего с сервера !!!!
+        // следующий этап
+        //
         // put по идее совсем ничего не меняет
         // он только добавляет id на создание сущности
         // перемены интерфейса не нужны
@@ -98,7 +101,9 @@ function optimisticPut(doorName, nId, diff) {
   iteratePrimitivesOrEmpty(diff, (x, path) => {
     const childDesc = getPath(desc, path)
 
-    if (isDoor(childDesc)) addRelation(nId, path, normId(childDesc.name, x))
+    if (isDoor(childDesc)) {
+      addRelation(nId, path, normId(childDesc.name, x))
+    }
 
     set(g.value[nId], path, x)
     set(g.updated_at[nId].value, path, now)

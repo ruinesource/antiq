@@ -25,6 +25,7 @@ export async function get(name, id, opts) {
   const { currentEvent: event } = g
   ++event.count
   const { count, results } = event
+  console.log(event)
 
   // здесь если сущность уже есть на фронте со всеми полями
   // возвращаем её даже без промиса, синхронным кодом
@@ -82,7 +83,6 @@ function getFromResults(actionCount) {
       set(updated_at.value, path, itemUpd)
 
       const pathDesc = getPath(desc, path)
-      // console.log(pathDesc, desc, do)
       if (isDoor(pathDesc)) addRelation(nId, path, normId(pathDesc.name, x))
     }
 

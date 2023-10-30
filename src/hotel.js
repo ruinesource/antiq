@@ -132,14 +132,14 @@ export default function hotel(door) {
       // на фронте put синхронен
       // но всё равно ставит лоадер на ивент
       upd: async (diff) => {
-        await bookD.get(17)
+        // await bookD.get(17)
         const book = await bookD.put(diff)
         return book
       },
 
       add: async () => {
         const book = await bookD.put({
-          team_member: null,
+          team_member: { name: 'yeah member' },
           authors: [],
           deep: { ea: 'valDeep', very: { ea: 'valVery' } },
         })

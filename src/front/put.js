@@ -127,6 +127,10 @@ export function putFromResults(doorName, actionCount, prevNId) {
   iteratePrimitivesOrEmpty(diff, (x, path) => {
     const upd_at = getPath(updated_at.value, path) || 0
     if (diffUpd >= upd_at) {
+      // для каждой сущности
+      // в put делаем diffOld
+      // при откате подставляем значения оттуда
+
       set(g.val[nId], path, x)
       set(g.value[nId], path, x)
       set(updated_at.value, path, diffUpd)

@@ -55,5 +55,5 @@ function onSocketConnect(ws) {
     }
   })
 
-  ws.on('close', (...args) => console.log(args))
+  ws.on('close', (...args) => console.log('close', args))
 }

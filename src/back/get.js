@@ -32,6 +32,8 @@ import { isDoor, isPlainObject } from '../utils.js'
 export async function get(name, id) {
   const result = await getItem(name, id)
 
+  // if (!id) throw 'no such item'
+
   return result
 }
 

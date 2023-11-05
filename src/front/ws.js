@@ -81,6 +81,7 @@ export async function sendEvent({ event, onSuccess }) {
   g.listner[event.id] = async (serverEvent) => {
     event.results = serverEvent.results
     g.currentEvent = event
+    console.log(g.currentEvent)
 
     if (serverEvent.e) {
       reject(serverEvent.e)
@@ -89,6 +90,7 @@ export async function sendEvent({ event, onSuccess }) {
 
       resolve(result)
     }
+    g.currentEvent = null
     delete g.listner[event.id]
   }
 

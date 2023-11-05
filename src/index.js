@@ -45,9 +45,10 @@ const { bookD } = open(hotel)
 // bookD.y().then((res) => console.log(res))
 // console.log(1, copy(g))
 
-bookD.upd({ id: 17, deep: { ea: 'oki' } }).then((res) => {
-  console.log('after put', res, g)
-})
+// вопрос: как создать одновременно 2 сущности из разных баз?
+// bookD.upd({ id: 17, deep: { ea: 'oki', team_member:  } }).then((res) => {
+//   console.log('after put', res, g)
+// })
 window.g = g
 window.k = () => {
   bookD.upd({ id: 17, deep: { ea: 'very' } })

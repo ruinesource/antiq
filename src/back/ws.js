@@ -40,6 +40,9 @@ function onSocketConnect(ws) {
     // результаты back
 
     g.currentEvent = event
+    g.isWsEvent = true
+    g.events[event.id] = event
+    g.eventChilds[event.id] = {}
 
     try {
       await g.door[doorName][apiName](...args)
@@ -53,7 +56,15 @@ function onSocketConnect(ws) {
       console.log(e)
       ws.send(JSON.stringify({ id: event.id, e }))
     }
+    // removeEventWithChilds(event.id)
   })
 
   ws.on('close', (...args) => console.log('close', args))
+}
+
+function removeEventWithChilds(id) {
+  const childs = g.eventChilds[id]
+  for (let cId of childs) removeEventWithChilds(cId)
+  delete g.events[id]
+  delete g.eventChilds[id]
 }

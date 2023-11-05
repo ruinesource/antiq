@@ -24,7 +24,27 @@ export function door(name, descFunc, getters = {}, setters = {}, options) {
 
 function event(door, apiFn, apiName) {
   return async function event(...args) {
-    const event = g.currentEvent
+    // как узнаём родителя, чтобы записать ивент в результат?
+    // так же как на фронте, через поток и глобальную переменную
+
+    // в конце g.currentEvent устанавливаем либо в родительский
+    // либо, если родителя нет, то в null
+
+    const { isWsEvent } = g
+    if (isWsEvent) g.isWsEvent = false
+
+    let event = isWsEvent
+      ? g.currentEvent
+      : {
+          id: Math.random(),
+          doorName: door.name,
+          results: [],
+          guest: g.currentEvent.guest,
+          count: -1,
+          args,
+          apiName,
+        }
+    if (!isWsEvent) event.parent = g.currentEvent
 
     function setActionsWithEventToDoor() {
       door.get = withSettedEvent(async (id) => {
@@ -66,6 +86,7 @@ function event(door, apiFn, apiName) {
         const result = await apiFn(...args)
 
         queueMicrotask(setActionsWithEventToDoor)
+        g.currentEvent = event
         return result
       }
     }
@@ -78,6 +99,11 @@ function event(door, apiFn, apiName) {
     } catch (e) {
       console.log(e)
       throw e
+    }
+
+    if (event.parent) {
+      event.parent.results.push(event)
+      delete event.parent
     }
 
     return result

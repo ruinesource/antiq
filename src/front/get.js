@@ -3,12 +3,10 @@ import g from '../g.js'
 import {
   getPath,
   set,
-  copy,
-  argsKey,
   iteratePrimitivesOrEmpty,
-  isPlainObject,
   isDoor,
   normId,
+  getParentOrEvent,
 } from '../utils.js'
 import { addRelation } from './relations.js'
 
@@ -25,7 +23,6 @@ export async function get(name, id, opts) {
   const { currentEvent: event } = g
   ++event.count
   const { count, results } = event
-  console.log(event)
 
   // здесь если сущность уже есть на фронте со всеми полями
   // возвращаем её даже без промиса, синхронным кодом
@@ -49,22 +46,24 @@ export async function get(name, id, opts) {
     if (!results[count]) results.push(g.value[nId])
 
     return g.value[nId]
+  } else {
+    g.value[nId] = {}
   }
-  if (!g.value[nId]) g.value[nId] = {}
 
   // results для автоматического сета на фронт
   // results посчитанное на фронте и не требующее отправки на сервер
 
-  if (results[count]) return getFromResults(count)
+  if (results[count]) return getFromResults(event, count)
 
   return sendEvent({
-    event,
-    onSuccess: () => getFromResults(count),
+    event: getParentOrEvent(event),
+    onSuccess: () => getFromResults(event, count),
   })
 }
 
-function getFromResults(actionCount) {
-  const { doorName, results } = g.currentEvent
+function getFromResults(event, actionCount) {
+  console.log(event, actionCount)
+  const { doorName, results } = event
   const desc = g.desc[doorName]
   const item = results[actionCount]
   const nId = normId(doorName, item.id)

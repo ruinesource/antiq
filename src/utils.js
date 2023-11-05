@@ -123,3 +123,8 @@ export function copy(x) {
   }
   return x
 }
+
+export function getParentOrEvent(event) {
+  if (!event?.parent?.id || event.parent === event) return event
+  return getParentOrEvent(event.parent)
+}

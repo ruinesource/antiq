@@ -15,7 +15,6 @@ const g = {
     args: [],
     results: [],
     count: -1,
-    promise: null,
     date: null,
   },
 
@@ -48,6 +47,10 @@ const g = {
     createTable: [],
   },
   listners: {}, // guest: normId: ?fileds
+  isWsEvent: false,
+  currentWsEvent: null,
+  events: {}, // eventId-event
+  eventChilds: {}, // eventId-childEventId
 }
 
 export default g

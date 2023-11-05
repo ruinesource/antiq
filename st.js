@@ -17,5 +17,3 @@ for (let k in g.desc) {
 }
 
 g.queries.createTable.forEach((q) => sql(q))
-
-// bookD.add().then(console.log)

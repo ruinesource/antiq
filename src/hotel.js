@@ -5,7 +5,9 @@
 // при table { deep: {} } не может существовать door table_deep
 
 export default function hotel(door) {
-  const teamMemberD = door('team_member', () => ({ name: '' }))
+  const teamMemberD = door('team_member', () => ({ name: '' }), {
+    one: (id) => teamMemberD.get(id),
+  })
 
   const authorD = door('author', () => ({
     name: '',
@@ -43,6 +45,8 @@ export default function hotel(door) {
 
       one: async (id) => {
         const book = await bookD.get(id)
+        const tm = await teamMemberD.one(book.team_member)
+        book.team_member = tm
 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // все обращения к стороннему апи внутри ивентов делаются на стороне бэка

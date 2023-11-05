@@ -6,6 +6,7 @@ import {
   getPath,
   isDoor,
   copy,
+  getParentOrEvent,
 } from '../utils.js'
 import { addRelation, removeRelation } from './relations.js'
 import g from '../g.js'
@@ -44,8 +45,9 @@ import g from '../g.js'
 // копить обновления до получения id
 
 export function put(doorName, diff, opts) {
-  ++g.currentEvent.count
-  const { id: eventId, count, results } = g.currentEvent
+  const { currentEvent: event } = g
+  ++event.count
+  const { id: eventId, count, results } = event
 
   if (results[count]) {
     const nId = putFromResults(doorName, count)
@@ -69,7 +71,7 @@ export function put(doorName, diff, opts) {
 
   if (wasNotSended)
     sendEvent({
-      event: g.currentEvent,
+      event: getParentOrEvent(event),
       onSuccess() {
         // !!!! здесь добавить подстановку id пришедшего с сервера !!!!
         // следующий этап

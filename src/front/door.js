@@ -44,6 +44,10 @@ function event(door, apiFn, apiName, isSetter) {
   // а родительский евент
 
   return async function event(...args) {
+    const eventParent = g.currentEvent?.id
+      ? null
+      : getParentOrEvent(g.currentEvent)
+
     let event = {
       id: /* g.currentEvent?.id || */ Math.random(),
       doorName: door.name,
@@ -56,9 +60,10 @@ function event(door, apiFn, apiName, isSetter) {
       // в currentEvent вызываемый в его теле ребёнок
       // и его запихивать в результаты отца
       // сам он может стать отцом, и его results изменятся
-      parent: !g.currentEvent?.id ? null : getParentOrEvent(g.currentEvent),
+      parent: eventParent,
       args,
     }
+
     if (!g.opened) await g.openingPromise
 
     if (g.currentEvent.id) {
@@ -77,9 +82,6 @@ function event(door, apiFn, apiName, isSetter) {
     // 4. продолжаем выполнять ивент, по очереди забирая из ответа данные
     // 5. массив экшнов удаляем в конце ивента, неважно делали запрос или нет
 
-    // внутри экшнов смотрим, нужно ли отправлять запрос
-    // самим экшнам не нужны id, они выполняются по порядку
-    // нужен флаг, пришли ли
     return processEvent(event)
   }
 
@@ -103,18 +105,21 @@ function event(door, apiFn, apiName, isSetter) {
     try {
       g.currentEvent = event
       setEventToDoorActions(event)
+      console.log(event)
       const promise = apiFn(...event.args)
 
       if (!isSetter) set(g.promise, [door.name, apiName, argsKey], promise)
-
-      // g.currentEvent = null
 
       result = await promise
     } catch (e) {
       console.error(e)
     } finally {
-      if (!isSetter) delete g.promise[door.name][apiName][argsKey]
+      if (result && !isSetter) {
+        g.promise[door.name][apiName][argsKey] = result
+      }
     }
+
+    if (event.parent) g.currentEvent = event.parent
 
     return result
   }

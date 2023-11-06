@@ -104,6 +104,7 @@ function event(door, apiFn, apiName) {
     if (event.parent) {
       event.parent.results.push(event)
       delete event.parent
+      g.currentEvent = event.parent
     }
 
     return result

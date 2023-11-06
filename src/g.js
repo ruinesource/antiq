@@ -48,9 +48,6 @@ const g = {
   },
   listners: {}, // guest: normId: ?fileds
   isWsEvent: false,
-  currentWsEvent: null,
-  events: {}, // eventId-event
-  eventChilds: {}, // eventId-childEventId
 }
 
 export default g

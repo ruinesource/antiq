@@ -1,6 +1,7 @@
 import ws from 'ws'
 import http from 'http'
 import g from '../g.js'
+import { delay } from '../utils.js'
 
 const wss = new ws.Server({ noServer: true })
 
@@ -28,6 +29,8 @@ function onSocketConnect(ws) {
     })
   )
 
+  let shouldDelay = true
+
   ws.on('message', async function (message) {
     const event = JSON.parse(message)
     const { doorName, apiName, args } = event
@@ -45,6 +48,15 @@ function onSocketConnect(ws) {
 
     try {
       await g.door[doorName][apiName](...args)
+
+      if (shouldDelay) {
+        shouldDelay = false
+        await delay(4000)
+      } else {
+        await delay(1000)
+        shouldDelay = true
+      }
+
       ws.send(
         JSON.stringify({
           id: event.id,

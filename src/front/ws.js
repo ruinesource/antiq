@@ -60,6 +60,7 @@ export function open(hotel) {
 
   const doors = {}
   for (let k in g.door) {
+    // сделать все _ в upperCase
     doors[`${k}D`] = g.door[k]
   }
 
@@ -81,7 +82,6 @@ export async function sendEvent({ event, onSuccess }) {
   g.listner[event.id] = async (serverEvent) => {
     event.results = serverEvent.results
     g.currentEvent = event
-    console.log(g.currentEvent)
 
     if (serverEvent.e) {
       reject(serverEvent.e)

@@ -128,3 +128,5 @@ export function getParentOrEvent(event) {
   if (!event?.parent?.id || event.parent === event) return event
   return getParentOrEvent(event.parent)
 }
+
+export const delay = (ms) => new Promise((k) => setTimeout(k, ms))

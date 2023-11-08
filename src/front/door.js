@@ -1,5 +1,5 @@
 import g from '../g.js'
-import { valToKey, set, getParentOrEvent } from '../utils.js'
+import { valToKey, set, getParentOrEvent, copy } from '../utils.js'
 import { get } from './get.js'
 import { put } from './put.js'
 
@@ -24,11 +24,7 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
   return door
 }
 
-// очередь выполнения методов внутри ивентов и их количество
-// на фронте и сервере одинаковы
-// и мы можем использовать индекс массива
-// напару с apiFnName он даёт полное представление о том, что за действие выполнено
-// ведь все аргументы отправляются с первым запросом фронта
+// уже посчитанные изменения экшнов записываются в results ивентов
 
 // в базу данных изменения коммитим
 
@@ -48,6 +44,8 @@ function event(door, apiFn, apiName, isSetter) {
       ? null
       : getParentOrEvent(g.currentEvent)
 
+    console.log(door, apiName, eventParent, g.currentEvent)
+
     let event = {
       id: /* g.currentEvent?.id || */ Math.random(),
       doorName: door.name,
@@ -66,7 +64,7 @@ function event(door, apiFn, apiName, isSetter) {
 
     if (!g.opened) await g.openingPromise
 
-    if (g.currentEvent.id) {
+    if (g.currentEvent?.id) {
       const { count, results } = g.currentEvent
 
       if (count > results.length) results.push(event)
@@ -105,7 +103,6 @@ function event(door, apiFn, apiName, isSetter) {
     try {
       g.currentEvent = event
       setEventToDoorActions(event)
-      console.log(event)
       const promise = apiFn(...event.args)
 
       if (!isSetter) set(g.promise, [door.name, apiName, argsKey], promise)
@@ -115,6 +112,7 @@ function event(door, apiFn, apiName, isSetter) {
       console.error(e)
     } finally {
       if (result && !isSetter) {
+        g.currentEvent = null
         g.promise[door.name][apiName][argsKey] = result
       }
     }
@@ -137,7 +135,9 @@ function event(door, apiFn, apiName, isSetter) {
       // по какой-то причине
       // синхронная установка переменных не даёт нужного результата
       // queueMicrotask делает её сразу после await при вызове
-      queueMicrotask(() => setEventToDoorActions(event))
+      // queueMicrotask(() => {
+      //   setEventToDoorActions(event)
+      // })
       g.currentEvent = event
       return result
     }

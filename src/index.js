@@ -2,7 +2,6 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import hotel from './hotel.js'
 import { open } from './front/ws.js'
-import { copy } from './utils.js'
 import g from './g.js'
 
 function App() {
@@ -12,7 +11,7 @@ function App() {
   return <div className="App"></div>
 }
 
-const { bookD } = open(hotel)
+const { bookD, team_memberD } = open(hotel)
 
 // если мы вызываем извне реакта
 // в useDa с теми же аргументами должны оказываться сущности без отправки запроса
@@ -51,8 +50,8 @@ const { bookD } = open(hotel)
 // })
 window.g = g
 window.k = () => {
-  bookD.upd({ id: 17, deep: { ea: 'very' } })
-  bookD.one(17).then(console.log)
+  team_memberD.one(1)
+  bookD.one(49).then(console.log)
 }
 
 // console.log(2, copy(g))

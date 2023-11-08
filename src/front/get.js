@@ -22,6 +22,7 @@ import { addRelation } from './relations.js'
 export async function get(name, id, opts) {
   const { currentEvent: event } = g
   ++event.count
+  g.currentEvent = null
   const { count, results } = event
 
   // здесь если сущность уже есть на фронте со всеми полями
@@ -62,7 +63,6 @@ export async function get(name, id, opts) {
 }
 
 function getFromResults(event, actionCount) {
-  console.log(event, actionCount)
   const { doorName, results } = event
   const desc = g.desc[doorName]
   const item = results[actionCount]

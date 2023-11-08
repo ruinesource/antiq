@@ -152,5 +152,5 @@ export default function hotel(door) {
     }
   )
 
-  return bookD
+  return { bookD, authorD, teamMemberD }
 }

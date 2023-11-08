@@ -1,6 +1,6 @@
 import { db } from './db.js'
 import g from '../g.js'
-import { isDoor, isPlainObject } from '../utils.js'
+import { delay, isDoor, isPlainObject } from '../utils.js'
 
 // на get на сервере мы в тело апи ивента отправляем результат из бд
 // кроме того, мы создаём подписку на все полученные поля сущности

@@ -29,10 +29,6 @@ export async function put(name, diff) {
   return { ...diff, ...tableDiff }
 }
 
-function delay(ms) {
-  return new Promise((r) => setTimeout(r, ms))
-}
-
 async function setPutVars(
   doorName,
   path,

@@ -47,6 +47,7 @@ import g from '../g.js'
 export function put(doorName, diff, opts) {
   const { currentEvent: event } = g
   ++event.count
+  g.currentEvent = null
   const { id: eventId, count, results } = event
 
   if (results[count]) {

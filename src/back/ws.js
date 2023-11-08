@@ -47,8 +47,6 @@ function onSocketConnect(ws) {
     try {
       await g.door[doorName][apiName](...args)
 
-      console.log(event)
-
       ws.send(
         JSON.stringify({
           id: event.id,

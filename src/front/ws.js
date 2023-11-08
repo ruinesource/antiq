@@ -15,6 +15,8 @@ let guest
 
 // структура ответа
 
+let wsLogs = {}
+
 export function open(hotel) {
   // ws.onopen = (e) => {
   // }
@@ -73,6 +75,9 @@ export async function sendEvent({ event, onSuccess }) {
 
   event.guest = guest
 
+  const msg = filterObj(event, 'count', 'parent', 'results')
+
+  if (wsLogs) wsLogs[event.id] = { front: msg }
   ws.send(JSON.stringify(filterObj(event, 'count', 'parent', 'results')))
 
   let resolve
@@ -85,7 +90,12 @@ export async function sendEvent({ event, onSuccess }) {
   g.listner[event.id] = async (serverEvent) => {
     event.results = serverEvent.results
     g.currentEvent = event
-    console.log('res', event.results, event)
+
+    if (wsLogs) {
+      wsLogs[event.id].server = event
+      console.log('ws', wsLogs[event.id])
+      delete wsLogs[event.id]
+    }
 
     if (serverEvent.e) {
       reject(serverEvent.e)
@@ -94,7 +104,6 @@ export async function sendEvent({ event, onSuccess }) {
 
       resolve(result)
     }
-    g.currentEvent = null
     delete g.listner[event.id]
   }
 

@@ -7,7 +7,8 @@ import g from './g.js'
 export default function hotel(door) {
   const teamMemberD = door('team_member', () => ({ name: '' }), {
     one: async (id) => {
-      await teamMemberD.get(id)
+      teamMemberD.get(id)
+      await teamMemberD.get(1)
       await bookD.one(49)
     },
   })
@@ -48,6 +49,8 @@ export default function hotel(door) {
 
       one: async (id) => {
         const book = await bookD.get(id)
+        if (id === 49) await bookD.get(50)
+        else await teamMemberD.one(1)
         // const tm = await teamMemberD.one(book.team_member)
         // book.team_member = tm
 

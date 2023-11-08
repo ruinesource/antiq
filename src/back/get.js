@@ -32,17 +32,15 @@ import { delay, isDoor, isPlainObject } from '../utils.js'
 let count = 0
 
 export async function get(name, id) {
-  const event = g.currentEvent
-
   const result = await getItem(name, id)
 
-  // if (count < 200 && id == 1) {
-  //   count = 0
-  //   await delay(4000)
-  // } else {
-  //   await delay(1000)
-  //   count++
-  // }
+  if (count < 2 && id == 1) {
+    count = 0
+    await delay(4000)
+  } else {
+    await delay(300)
+    count++
+  }
   // if (!id) throw 'no such item'
 
   return result

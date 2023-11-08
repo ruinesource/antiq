@@ -21,7 +21,6 @@ import { addRelation } from './relations.js'
 
 export async function get(name, id, opts) {
   const { currentEvent: event } = g
-  ++event.count
   g.currentEvent = null
   const { count, results } = event
 
@@ -54,7 +53,6 @@ export async function get(name, id, opts) {
   // results для автоматического сета на фронт
   // results посчитанное на фронте и не требующее отправки на сервер
 
-  console.log(results, count)
   if (results[count]) {
     return getFromResults(event, count)
   }
@@ -70,7 +68,6 @@ export async function get(name, id, opts) {
 function getFromResults(event, actionCount) {
   const { doorName, results } = event
   const desc = g.desc[doorName]
-  console.log(results, actionCount)
   const item = results[actionCount]
   const nId = normId(doorName, item.id)
   const updated_at = g.updated_at[nId]

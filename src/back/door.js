@@ -43,13 +43,13 @@ function event(door, apiFn, apiName) {
         }
     if (!isWsEvent) event.parent = g.currentEvent
 
-    setActionsWithEventToDoor(event)
+    setActionsToDoor(event)
 
     let result
     try {
       result = await apiFn(...args)
     } catch (e) {
-      console.log(e)
+      console.error(e)
       throw e
     }
 
@@ -62,22 +62,25 @@ function event(door, apiFn, apiName) {
     return result
   }
 
-  function setActionsWithEventToDoor(event) {
-    g.currentEvent = event
-
-    door.get = withSettedEvent(event, async (id) => {
+  function setActionsToDoor(event) {
+    door.get = withEvent(event, async (id) => {
+      g.currentEvent = event
       const result = await get(door.name, id)
       const nId = normId(door.name, id)
 
       set(guestsByNormId, [nId, event.guest], true)
+      setActionsToDoor(event)
 
       return result
     })
 
-    door.put = withSettedEvent(event, async (diff) => {
+    door.put = withEvent(event, async (diff) => {
+      g.currentEvent = event
       const result = await put(door.name, diff)
-      const nId = normId(door.name, diff.id)
 
+      setActionsToDoor(event)
+
+      const nId = normId(door.name, diff.id)
       for (let gst in guestsByNormId[nId]) {
         if (+gst !== event.guest) {
           guests[gst].send(
@@ -94,7 +97,7 @@ function event(door, apiFn, apiName) {
     })
   }
 
-  function withSettedEvent(event, apiFn) {
+  function withEvent(event, apiFn) {
     return async (...args) => {
       g.currentEvent = event
 

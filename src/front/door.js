@@ -35,9 +35,7 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
 function event(door, apiFn, apiName, isSetter) {
   // если event внутри event'a
   // то запрос отправляем один раз
-  // в results отправляем результат для currentEvent
-  // и выполняем его синхронно
-  // а родительский евент
+  // случай await Promise.all([xAction, yAction]) - оптимизация сервера напотом
 
   return async function event(...args) {
     const eventParent = g.currentEvent?.id ? g.currentEvent : null
@@ -48,12 +46,6 @@ function event(door, apiFn, apiName, isSetter) {
       apiName: apiName,
       results: [],
       count: -1,
-      // название getParentOrEvent некорректное, и функционал здесь тоже
-      // нужно записывать каждый раз в теле вызывания экшна и ивента внутри ивента
-      // в parentEvent отец выполняемого ивента
-      // в currentEvent вызываемый в его теле ребёнок
-      // и его запихивать в результаты отца
-      // сам он может стать отцом, и его results изменятся
       parent: eventParent,
       args,
     }
@@ -62,17 +54,11 @@ function event(door, apiFn, apiName, isSetter) {
 
     if (g.currentEvent?.id) {
       const { count, results } = g.currentEvent
-      console.log(
-        g.currentEvent,
-        g.currentEvent.count,
-        g.currentEvent.results.length,
-        results[count]
-      )
 
       if (count >= results.length) results.push(event)
       else {
         g.currentEvent.count++
-        return processEvent(results[count])
+        return processEvent(results[count + 1])
       }
     }
 
@@ -104,7 +90,7 @@ function event(door, apiFn, apiName, isSetter) {
     let result
     try {
       g.currentEvent = event
-      setEventToDoorActions(event)
+      setActionsToDoor(event)
       const promise = apiFn(...event.args)
 
       if (!isSetter) set(g.promise, [door.name, apiName, argsKey], promise)
@@ -124,24 +110,26 @@ function event(door, apiFn, apiName, isSetter) {
     return result
   }
 
-  function setEventToDoorActions(event) {
-    door.get = withSettedEvent(event, (id) => get(door.name, id))
-    door.put = withSettedEvent(event, (diff) => put(door.name, diff))
+  function setActionsToDoor(event) {
+    door.get = withEvent(event, (id) => get(door.name, id))
+    door.put = withEvent(event, (diff) => put(door.name, diff))
   }
 
-  function withSettedEvent(event, action) {
+  function withEvent(event, action) {
     return async (...args) => {
       g.currentEvent = event
+      g.currentEvent.count++
+
       const result = await action(...args)
+      g.currentEvent = event
 
       // по какой-то причине
       // синхронная установка переменных не даёт нужного результата
       // queueMicrotask делает её сразу после await при вызове
+      // !!!!!!! не воспроизводится
       // queueMicrotask(() => {
-      //   setEventToDoorActions(event)
+      setActionsToDoor(event)
       // })
-      g.currentEvent = event
-      g.currentEvent.count++
       return result
     }
   }

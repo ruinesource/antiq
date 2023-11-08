@@ -37,31 +37,12 @@ const { bookD, team_memberD } = open(hotel)
 // при изменении этих сущностей, отправляем на фронт [{ t: 'get', ... }, { ... }] и выполняем с ними метод
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-// g.promises.book.x[argsKey] = promise->getterResult
-
-// bookD.x().then(() => console.log(3, copy(g)))
-// bookD.x().then(() => console.log(3, copy(g)))
-// bookD.y().then((res) => console.log(res))
-// console.log(1, copy(g))
-
-// вопрос: как создать одновременно 2 сущности из разных баз?
-// bookD.upd({ id: 17, deep: { ea: 'oki', team_member:  } }).then((res) => {
-//   console.log('after put', res, g)
-// })
 window.g = g
 window.k = () => {
+  bookD.one(49)
   team_memberD.one(1)
-  // bookD.one(49).then(console.log)
+  bookD.one(50)
 }
-
-// console.log(2, copy(g))
-// bookD.one(17).then((e) => {
-//   console.log('one', e)
-// })
-
-// window.p = () => {
-//   bookD.upd({ team_member: 8 })
-// }
 
 // upd пока не пришел ответ от предыдущего
 // загрузка

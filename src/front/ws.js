@@ -1,4 +1,5 @@
 import g, { openingPromiseResolver } from '../g.js'
+import { filterObj } from '../utils.js'
 import { door } from './door.js'
 import { putFromResults, rerenderBounded } from './put.js'
 const ws = new WebSocket('ws://localhost:5588')
@@ -69,8 +70,10 @@ export function open(hotel) {
 
 export async function sendEvent({ event, onSuccess }) {
   if (!guest) await openingPromiseResolver
+
   event.guest = guest
-  ws.send(JSON.stringify(event))
+
+  ws.send(JSON.stringify(filterObj(event, 'count', 'parent', 'results')))
 
   let resolve
   let reject
@@ -82,6 +85,7 @@ export async function sendEvent({ event, onSuccess }) {
   g.listner[event.id] = async (serverEvent) => {
     event.results = serverEvent.results
     g.currentEvent = event
+    console.log('res', event.results, event)
 
     if (serverEvent.e) {
       reject(serverEvent.e)

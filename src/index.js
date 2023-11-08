@@ -51,7 +51,7 @@ const { bookD, team_memberD } = open(hotel)
 window.g = g
 window.k = () => {
   team_memberD.one(1)
-  bookD.one(49).then(console.log)
+  // bookD.one(49).then(console.log)
 }
 
 // console.log(2, copy(g))

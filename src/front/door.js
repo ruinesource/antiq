@@ -40,11 +40,7 @@ function event(door, apiFn, apiName, isSetter) {
   // а родительский евент
 
   return async function event(...args) {
-    const eventParent = g.currentEvent?.id
-      ? null
-      : getParentOrEvent(g.currentEvent)
-
-    console.log(door, apiName, eventParent, g.currentEvent)
+    const eventParent = g.currentEvent?.id ? g.currentEvent : null
 
     let event = {
       id: /* g.currentEvent?.id || */ Math.random(),
@@ -66,11 +62,17 @@ function event(door, apiFn, apiName, isSetter) {
 
     if (g.currentEvent?.id) {
       const { count, results } = g.currentEvent
+      console.log(
+        g.currentEvent,
+        g.currentEvent.count,
+        g.currentEvent.results.length,
+        results[count]
+      )
 
-      if (count > results.length) results.push(event)
+      if (count >= results.length) results.push(event)
       else {
         g.currentEvent.count++
-        return processEvent(results[count + 1])
+        return processEvent(results[count])
       }
     }
 
@@ -139,6 +141,7 @@ function event(door, apiFn, apiName, isSetter) {
       //   setEventToDoorActions(event)
       // })
       g.currentEvent = event
+      g.currentEvent.count++
       return result
     }
   }

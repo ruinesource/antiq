@@ -3,10 +3,13 @@
 
 // конфликт имён с таблицами внутренних свойств
 // при table { deep: {} } не может существовать door table_deep
-
+import g from './g.js'
 export default function hotel(door) {
   const teamMemberD = door('team_member', () => ({ name: '' }), {
-    one: (id) => teamMemberD.get(id),
+    one: async (id) => {
+      await teamMemberD.get(id)
+      await bookD.one(49)
+    },
   })
 
   const authorD = door('author', () => ({
@@ -45,8 +48,8 @@ export default function hotel(door) {
 
       one: async (id) => {
         const book = await bookD.get(id)
-        const tm = await teamMemberD.one(book.team_member)
-        book.team_member = tm
+        // const tm = await teamMemberD.one(book.team_member)
+        // book.team_member = tm
 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // все обращения к стороннему апи внутри ивентов делаются на стороне бэка

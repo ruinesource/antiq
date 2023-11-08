@@ -130,3 +130,9 @@ export function getParentOrEvent(event) {
 }
 
 export const delay = (ms) => new Promise((k) => setTimeout(k, ms))
+
+export function filterObj(x, ...keys) {
+  const k = {}
+  for (let key in x) if (!keys.includes[key]) k[key] = x[key]
+  return k
+}

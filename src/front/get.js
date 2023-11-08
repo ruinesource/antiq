@@ -54,17 +54,23 @@ export async function get(name, id, opts) {
   // results для автоматического сета на фронт
   // results посчитанное на фронте и не требующее отправки на сервер
 
-  if (results[count]) return getFromResults(event, count)
+  console.log(results, count)
+  if (results[count]) {
+    return getFromResults(event, count)
+  }
 
   return sendEvent({
     event: getParentOrEvent(event),
-    onSuccess: () => getFromResults(event, count),
+    onSuccess: () => {
+      return getFromResults(g.currentEvent, count)
+    },
   })
 }
 
 function getFromResults(event, actionCount) {
   const { doorName, results } = event
   const desc = g.desc[doorName]
+  console.log(results, actionCount)
   const item = results[actionCount]
   const nId = normId(doorName, item.id)
   const updated_at = g.updated_at[nId]

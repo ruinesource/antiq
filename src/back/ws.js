@@ -15,7 +15,7 @@ http
   .createServer((req, res) => {
     wss.handleUpgrade(req, req.socket, Buffer.alloc(0), onSocketConnect)
   })
-  .listen(5588)
+  .listen(4387)
 
 function onSocketConnect(ws) {
   const guest = Math.random()

@@ -99,8 +99,9 @@ function event(door, apiFn, apiName, isSetter) {
     } catch (e) {
       console.error(e)
     } finally {
+      g.currentEvent = null
+
       if (result && !isSetter) {
-        g.currentEvent = null
         g.promise[door.name][apiName][argsKey] = result
       }
     }
@@ -124,9 +125,9 @@ function event(door, apiFn, apiName, isSetter) {
       g.currentEvent = event
 
       // по какой-то причине
-      // синхронная установка переменных не даёт нужного результата
-      // queueMicrotask делает её сразу после await при вызове
-      // !!!!!!! не воспроизводится
+      // синхронная установка переменных не давала нужного результата
+      // queueMicrotask делал её после await выше
+      // ! не воспроизводится !
       // queueMicrotask(() => {
       setActionsToDoor(event)
       // })

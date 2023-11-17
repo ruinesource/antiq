@@ -13,10 +13,28 @@ export default function hotel(door) {
     },
   })
 
-  const authorD = door('author', () => ({
-    name: '',
-    books: [bookD],
-  }))
+  const authorD = door(
+    'author',
+    () => ({
+      name: '',
+      books: [bookD],
+    }),
+    {
+      one: (id) => authorD.get(id),
+    },
+    {
+      upd: (diff) => {
+        authorD.put(diff)
+        // const newBooks = []
+        // const removedBooks = []
+        // if (diff.books) {
+        //   for (let i = 0)
+        // }
+        // if (diff.books && author.books !== diff.books) {
+        // }
+      },
+    }
+  )
 
   const bookD = door(
     'book',

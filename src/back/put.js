@@ -8,7 +8,15 @@ import {
   tn,
 } from '../utils.js'
 import { db } from './db.js'
+import { guests } from './ws.js'
 import g from '../g.js'
+
+function logOnFornt(body) {
+  console.log('oki')
+  for (const guest in guests) {
+    guest[guests].send(JSON.stringify(body))
+  }
+}
 
 // таблица с графом экземпляр-экземпляр
 
@@ -318,9 +326,7 @@ export const removeItems = (tableName, items = []) =>
 const sqlQuotes = (x) => (typeof x === 'string' ? `'${x}'` : x)
 
 async function execQueries(queries, delayedIds) {
-  for (let q of queries) {
-    await execQuery(q, delayedIds)
-  }
+  for (let q of queries) await execQuery(q, delayedIds)
 }
 
 async function execQuery(query, delayedIds) {

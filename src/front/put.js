@@ -73,6 +73,7 @@ export function put(doorName, diff, opts) {
     sendEvent({
       event: getParentOrEvent(event),
       onSuccess() {
+        applyOptimisticPut(event, nId)
         // !!!! здесь добавить подстановку id пришедшего с сервера !!!!
         // следующий этап
         //
@@ -92,24 +93,6 @@ export function put(doorName, diff, opts) {
     })
 
   return value
-}
-
-function rerenderBounded(doorName, nextValue) {}
-
-function optimisticPut(doorName, nId, diff) {
-  const desc = g.desc[doorName]
-  const now = new Date()
-
-  iteratePrimitivesOrEmpty(diff, (x, path) => {
-    const childDesc = getPath(desc, path)
-
-    if (isDoor(childDesc)) {
-      addRelation(nId, path, normId(childDesc.name, x))
-    }
-
-    set(g.value[nId], path, x)
-    set(g.updated_at[nId].value, path, now)
-  })
 }
 
 export function putFromResults(doorName, actionCount, prevNId) {
@@ -145,6 +128,48 @@ export function putFromResults(doorName, actionCount, prevNId) {
   return nId
 }
 
+function optimisticPut(doorName, nId, diff) {
+  const desc = g.desc[doorName]
+  const now = new Date()
+
+  iteratePrimitivesOrEmpty(diff, (x, path) => {
+    const childDesc = getPath(desc, path)
+
+    if (isDoor(childDesc)) {
+      addRelation(nId, path, normId(childDesc.name, x))
+    }
+
+    set(g.value[nId], path, x)
+    set(g.updated_at[nId].value, path, now)
+  })
+}
+
+// отмена put не возвращает состояния, которое было до put
+// она замещает данные, которые не были изменены после этого put
+// на данные из val
+
+// подставляем данные из value в val
+// меняем updated_at у val
+// новые сущности перезаписываем в value
+function applyOptimisticPut(event, creationNId) {
+  // if (isCreation) {
+  // }
+}
+
+function removeMock(doorName, mockNId) {
+  delete g.val[mockNId]
+  delete g.value[mockNId]
+  delete g.updated_at[mockNId]
+  delete g.parents[mockNId]
+  delete g.childs[mockNId]
+  deleteSecondLevel('parents')
+  deleteSecondLevel('childs')
+
+  function deleteSecondLevel(k) {
+    for (const nId in g[k]) delete g[k][nId][mockNId]
+  }
+}
+
 function cancelOptimisticPut(doorName, id) {
   const desc = g.desc[doorName]
   const nId = normId(doorName, id)
@@ -163,16 +188,4 @@ function cancelOptimisticPut(doorName, id) {
     })
 }
 
-function removeMock(doorName, mockNId) {
-  delete g.val[mockNId]
-  delete g.value[mockNId]
-  delete g.updated_at[mockNId]
-  delete g.parents[mockNId]
-  delete g.childs[mockNId]
-  deleteSecondLevel('parents')
-  deleteSecondLevel('childs')
-
-  function deleteSecondLevel(k) {
-    for (const nId in g[k]) delete g[k][nId][mockNId]
-  }
-}
+function rerenderBounded(doorName, nextValue) {}

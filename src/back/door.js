@@ -104,6 +104,7 @@ function event(door, apiFn, apiName) {
       const result = await apiFn(...args)
       event.results.push(result)
 
+      console.log(event)
       g.currentEvent = event
       return result
     }

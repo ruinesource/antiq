@@ -23,16 +23,21 @@ export default function hotel(door) {
       one: (id) => authorD.get(id),
     },
     {
-      upd: (diff) => {
-        authorD.put(diff)
-        // const newBooks = []
-        // const removedBooks = []
-        // if (diff.books) {
-        //   for (let i = 0)
-        // }
-        // if (diff.books && author.books !== diff.books) {
-        // }
+      oki: async () => {
+        // выполнение тела ивента произойдёт один раз
+        // и внешний код продолжит выполнение
+        // сами ивенты нужно завершать только после ответа от сервера
+        // и если в ивенте есть создание сущности
+        // то при ответе сервера
+        // нужно выполнять ивент ещё раз с актуальными id
+
+        const result = await authorD.put({ name: 'oki' })
+        console.log(result)
+        const second = await authorD.put({ name: 'doki' })
+        console.log(second)
+        return result
       },
+      upd: (diff) => authorD.put(diff),
     }
   )
 

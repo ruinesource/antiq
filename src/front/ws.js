@@ -1,5 +1,5 @@
 import g, { openingPromiseResolver } from '../g.js'
-import { filterObj } from '../utils.js'
+import { filterObj, copy } from '../utils.js'
 import { door } from './door.js'
 import { putFromResults, rerenderBounded } from './put.js'
 const ws = new WebSocket('ws://localhost:4387')

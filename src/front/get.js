@@ -60,7 +60,7 @@ export async function get(name, id, opts) {
   return sendEvent({
     event: getParentOrEvent(event),
     onSuccess: () => {
-      return getFromResults(g.currentEvent, count)
+      return getFromResults(event, count)
     },
   })
 }
@@ -70,7 +70,8 @@ function getFromResults(event, actionCount) {
   const desc = g.desc[doorName]
   const item = results[actionCount]
   const nId = normId(doorName, item.id)
-  const updated_at = g.updated_at[nId]
+  const updated_at = g.updated_at[nId] || 0
+  console.log(item.updated_at)
   const itemUpd = new Date(item.updated_at)
 
   if (itemUpd > updated_at.val) updated_at.val = itemUpd
@@ -79,6 +80,7 @@ function getFromResults(event, actionCount) {
 
   iteratePrimitivesOrEmpty(item, (x, path) => {
     const upd_at = getPath(updated_at.value, path) || 0
+    console.log(item, itemUpd, upd_at, path)
     if (itemUpd >= upd_at) {
       set(g.val[nId], path, x)
       set(g.value[nId], path, x)

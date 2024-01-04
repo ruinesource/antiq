@@ -5,13 +5,20 @@
 // при table { deep: {} } не может существовать door table_deep
 import g from './g.js'
 export default function hotel(door) {
-  const teamMemberD = door('team_member', () => ({ name: '' }), {
-    one: async (id) => {
-      teamMemberD.get(id)
-      await teamMemberD.get(1)
-      await bookD.one(49)
+  const teamMemberD = door(
+    'team_member',
+    () => ({ name: '' }),
+    {
+      one: async (id) => {
+        teamMemberD.get(id)
+        await teamMemberD.get(1)
+        await bookD.one(49)
+      },
     },
-  })
+    {
+      upd: (diff) => teamMemberD.put(diff),
+    }
+  )
 
   const authorD = door(
     'author',

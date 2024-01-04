@@ -71,7 +71,6 @@ function getFromResults(event, actionCount) {
   const item = results[actionCount]
   const nId = normId(doorName, item.id)
   const updated_at = g.updated_at[nId] || 0
-  console.log(item.updated_at)
   const itemUpd = new Date(item.updated_at)
 
   if (itemUpd > updated_at.val) updated_at.val = itemUpd

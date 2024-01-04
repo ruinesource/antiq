@@ -11,7 +11,7 @@ function App() {
   return <div className="App"></div>
 }
 
-const { bookD, team_memberD } = open(hotel)
+const { authorD, bookD, team_memberD } = open(hotel)
 
 // если мы вызываем извне реакта
 // в useDa с теми же аргументами должны оказываться сущности без отправки запроса
@@ -39,9 +39,18 @@ const { bookD, team_memberD } = open(hotel)
 
 window.g = g
 window.k = () => {
-  bookD.one(49)
-  team_memberD.one(1)
-  bookD.one(50)
+  // отправляем на сервер id моковой сущности при создании
+  // и меняем его в связях при подтверждении
+  // на сервере при каждой операции со связями смотрим, моковый ли id
+  // если да, то замещаем
+  // на сервере маппинг tempId-id удаляем после первой операции с новым id, или через timeout
+
+  const nextInst = authorD.upd({ name: 'oki' })
+
+  bookD.upd({})
+  // bookD.one(49)
+  // team_memberD.one(1)
+  // bookD.one(50)
 }
 
 // upd пока не пришел ответ от предыдущего

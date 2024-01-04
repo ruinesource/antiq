@@ -11,8 +11,7 @@ import { db } from './db.js'
 import { guests } from './ws.js'
 import g from '../g.js'
 
-function logOnFornt(body) {
-  console.log('oki')
+function logOnFront(body) {
   for (const guest in guests) {
     guest[guests].send(JSON.stringify(body))
   }

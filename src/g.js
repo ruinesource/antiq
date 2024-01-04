@@ -23,8 +23,8 @@ const g = {
   openingPromise: new Promise((r) => {
     openingPromiseResolver.exec = r
   }),
-  value: {}, // nId: item
-  val: {}, // nId: lastConfirmedItem
+  value: {}, // nId: fresh item (интерфейс)
+  val: {}, // nId: confirmed item (для cancel optimistic put)
   updated_at: {}, // nId: { val: date, value: { field: date } },
 
   // при удалении идём по родителям и ставим null

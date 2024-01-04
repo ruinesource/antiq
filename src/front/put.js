@@ -37,7 +37,7 @@ import g from '../g.js'
 // при всех изменениях сущностей внутри них
 // их результаты вызовов поскольку запомнены, мы запоминаем и ререндерим их на фронте
 
-// на put и get мы создаём поключение к каждому связанному полю сущности
+// на put и get мы создаём подключение к каждому связанному полю сущности
 // при изменении полей всегда приходит дата запоминания в бд
 
 // !!!!!!!!! при изменении child_db в door нужно менять updated_at у бд самой door !!!!!!!!!
@@ -150,10 +150,12 @@ function optimisticPut(doorName, nId, diff) {
 
 // подставляем данные из value в val
 // меняем updated_at у val
-// новые сущности перезаписываем в value
+// новые сущности перезаписываем в value с новым id
+// связи parents childs перезаписываем
 function applyOptimisticPut(event, creationNId) {
-  // if (isCreation) {
-  // }
+  const isCreation = !event.args[0].id
+
+  if (isCreation) removeMock()
 }
 
 function removeMock(doorName, mockNId) {

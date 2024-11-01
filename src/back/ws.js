@@ -30,9 +30,9 @@ function onSocketConnect(ws) {
   )
 
   ws.on('message', async function (message) {
-    const event = JSON.parse(message)
-    const { doorName, apiName, args } = event
-    event.results = []
+    const action = JSON.parse(message)
+    const { doorName, apiName, args } = action
+    action.results = []
 
     // здесь в results записываем по порядку:
     // результаты get
@@ -41,22 +41,22 @@ function onSocketConnect(ws) {
     // результаты back
     // вложенные ивенты
 
-    g.currentEvent = event
-    g.isWsEvent = true
+    g.currentAction = action
+    g.isWsAction = true
 
     try {
       await g.door[doorName][apiName](...args)
-      console.log(2, event)
+      console.log(2, action)
 
       ws.send(
         JSON.stringify({
-          id: event.id,
-          results: event.results,
+          id: action.id,
+          results: action.results,
         })
       )
     } catch (e) {
       console.log(e)
-      ws.send(JSON.stringify({ id: event.id, e }))
+      ws.send(JSON.stringify({ id: action.id, e }))
     }
   })
 

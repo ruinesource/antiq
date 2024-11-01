@@ -27,23 +27,23 @@ export function open(hotel) {
   // на сеттеры смотрим, какие guest на них подписаны, отправляем их туда
 
   ws.onmessage = async (msg) => {
-    const event = JSON.parse(msg.data)
+    const action = JSON.parse(msg.data)
 
-    if (event.t === 'open') {
+    if (action.t === 'open') {
       g.opened = true
-      guest = event.guest
+      guest = action.guest
       openingPromiseResolver.exec()
       return
     }
 
-    if (g.listner[event.id]) {
-      await g.listner[event.id](event)
-      delete g.listner[event.id]
+    if (g.listner[action.id]) {
+      await g.listner[action.id](action)
+      delete g.listner[action.id]
     }
 
-    if (event.t === 'put') {
-      g.currentEvent = { results: [event.diff] }
-      putFromResults(event.doorName, 0)
+    if (action.t === 'put') {
+      g.currentAction = { results: [action.diff] }
+      putFromResults(action.doorName, 0)
       // ...rerenderBounded
     }
   }
@@ -70,15 +70,15 @@ export function open(hotel) {
   return doors
 }
 
-export async function sendEvent({ event, onSuccess }) {
+export async function sendAction({ action, onSuccess }) {
   if (!guest) await openingPromiseResolver
 
-  event.guest = guest
+  action.guest = guest
 
-  const msg = filterObj(event, 'count', 'parent', 'results')
+  const msg = filterObj(action, 'count', 'parent', 'results')
 
-  if (wsLogs) wsLogs[event.id] = { front: msg }
-  ws.send(JSON.stringify(filterObj(event, 'count', 'parent', 'results')))
+  if (wsLogs) wsLogs[action.id] = { front: msg }
+  ws.send(JSON.stringify(filterObj(action, 'count', 'parent', 'results')))
 
   let resolve
   let reject
@@ -87,24 +87,24 @@ export async function sendEvent({ event, onSuccess }) {
     reject = rej
   })
 
-  g.listner[event.id] = async (serverEvent) => {
-    event.results = serverEvent.results
-    g.currentEvent = event
+  g.listner[action.id] = async (serverAction) => {
+    action.results = serverAction.results
+    g.currentAction = action
 
     if (wsLogs) {
-      wsLogs[event.id].server = event
-      console.log('ws', wsLogs[event.id])
-      delete wsLogs[event.id]
+      wsLogs[action.id].server = action
+      console.log('ws', wsLogs[action.id])
+      delete wsLogs[action.id]
     }
 
-    if (serverEvent.e) {
-      reject(serverEvent.e)
+    if (serverAction.e) {
+      reject(serverAction.e)
     } else {
       const result = await onSuccess()
 
       resolve(result)
     }
-    delete g.listner[event.id]
+    delete g.listner[action.id]
   }
 
   return promise

@@ -124,9 +124,9 @@ export function copy(x) {
   return x
 }
 
-export function getParentOrEvent(event) {
-  if (!event?.parent?.id || event.parent === event) return event
-  return getParentOrEvent(event.parent)
+export function getParentOrAction(action) {
+  if (!action?.parent?.id || action.parent === action) return action
+  return getParentOrAction(action.parent)
 }
 
 export const delay = (ms) => new Promise((k) => setTimeout(k, ms))

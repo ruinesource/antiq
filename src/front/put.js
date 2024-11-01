@@ -1,4 +1,4 @@
-import { sendEvent } from './ws.js'
+import { sendAction } from './ws.js'
 import {
   normId,
   iteratePrimitivesOrEmpty,
@@ -6,7 +6,7 @@ import {
   getPath,
   isDoor,
   copy,
-  getParentOrEvent,
+  getParentOrAction,
 } from '../utils.js'
 import { addRelation, removeRelation } from './relations.js'
 import g from '../g.js'
@@ -45,9 +45,9 @@ import g from '../g.js'
 // копить обновления до получения id
 
 export function put(doorName, diff, opts) {
-  const { currentEvent: event } = g
-  g.currentEvent = null
-  const { id: eventId, count, results } = event
+  const { currentAction: action } = g
+  g.currentAction = null
+  const { id: actionId, count, results } = action
 
   if (results[count]) {
     const nId = putFromResults(doorName, count)
@@ -67,13 +67,13 @@ export function put(doorName, diff, opts) {
   optimisticPut(doorName, nId, diff)
   rerenderBounded(doorName, nId)
 
-  const wasNotSended = !g.listner[eventId]
+  const wasNotSended = !g.listner[actionId]
 
   if (wasNotSended)
-    sendEvent({
-      event: getParentOrEvent(event),
+    sendAction({
+      action: getParentOrAction(action),
       onSuccess() {
-        applyOptimisticPut(event, nId)
+        applyOptimisticPut(action, nId)
         // !!!! здесь добавить подстановку id пришедшего с сервера !!!!
         // следующий этап
         //
@@ -95,8 +95,8 @@ export function put(doorName, diff, opts) {
   return value
 }
 
-export function putFromResults(doorName, actionCount, prevNId) {
-  const diff = g.currentEvent.results[actionCount]
+export function putFromResults(doorName, methodCount, prevNId) {
+  const diff = g.currentAction.results[methodCount]
   const nId = normId(doorName, diff.id)
   const desc = g.desc[doorName]
 
@@ -152,8 +152,8 @@ function optimisticPut(doorName, nId, diff) {
 // меняем updated_at у val
 // новые сущности перезаписываем в value с новым id
 // связи parents childs перезаписываем
-function applyOptimisticPut(event, creationNId) {
-  const isCreation = !event.args[0].id
+function applyOptimisticPut(action, creationNId) {
+  const isCreation = !action.args[0].id
 
   if (isCreation) removeMock()
 }

@@ -79,8 +79,6 @@ export default function hotel(door) {
 
       one: async (id) => {
         const book = await bookD.get(id)
-        if (id === 49) await bookD.get(50)
-        else await teamMemberD.one(1)
         // const tm = await teamMemberD.one(book.team_member)
         // book.team_member = tm
 

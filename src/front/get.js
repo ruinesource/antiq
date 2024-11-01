@@ -1,4 +1,4 @@
-import { sendEvent } from './ws.js'
+import { sendAction } from './ws.js'
 import g from '../g.js'
 import {
   getPath,
@@ -6,23 +6,23 @@ import {
   iteratePrimitivesOrEmpty,
   isDoor,
   normId,
-  getParentOrEvent,
+  getParentOrAction,
 } from '../utils.js'
 import { addRelation } from './relations.js'
 
-// i eventId
+// i actionId
 // d door
-// e eventName
-// a eventArgs
+// e actionName
+// a actionArgs
 // err err
 // c cookies...
 
 // на одно свойство может потребоваться несколько сравнений (и/или)
 
 export async function get(name, id, opts) {
-  const { currentEvent: event } = g
-  g.currentEvent = null
-  const { count, results } = event
+  const { currentAction: action } = g
+  g.currentAction = null
+  const { count, results } = action
 
   // здесь если сущность уже есть на фронте со всеми полями
   // возвращаем её даже без промиса, синхронным кодом
@@ -54,21 +54,21 @@ export async function get(name, id, opts) {
   // results посчитанное на фронте и не требующее отправки на сервер
 
   if (results[count]) {
-    return getFromResults(event, count)
+    return getFromResults(action, count)
   }
 
-  return sendEvent({
-    event: getParentOrEvent(event),
+  return sendAction({
+    action: getParentOrAction(action),
     onSuccess: () => {
-      return getFromResults(event, count)
+      return getFromResults(action, count)
     },
   })
 }
 
-function getFromResults(event, actionCount) {
-  const { doorName, results } = event
+function getFromResults(action, methodCount) {
+  const { doorName, results } = action
   const desc = g.desc[doorName]
-  const item = results[actionCount]
+  const item = results[methodCount]
   const nId = normId(doorName, item.id)
   const updated_at = g.updated_at[nId] || 0
   const itemUpd = new Date(item.updated_at)
@@ -79,7 +79,6 @@ function getFromResults(event, actionCount) {
 
   iteratePrimitivesOrEmpty(item, (x, path) => {
     const upd_at = getPath(updated_at.value, path) || 0
-    console.log(item, itemUpd, upd_at, path)
     if (itemUpd >= upd_at) {
       set(g.val[nId], path, x)
       set(g.value[nId], path, x)

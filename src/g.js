@@ -8,7 +8,7 @@ const g = {
   orm: {}, // name: () => ...pathToChild
   desc: {}, // { name: desc },
   door: {}, // name: door
-  currentEvent: {
+  currentAction: {
     id: null,
     doorName: '',
     apiName: '',
@@ -33,13 +33,13 @@ const g = {
   childs: {}, // nId: childId: { ...pathToChild: true }
 
   // при обновлении обновляем все геттеры, экшны в которых вернули сущность
-  // nIdEvents: {}, // nId: door: getApiName: eventArgsKey: [...actionResultIdx]
+  // nIdActions: {}, // nId: door: getApiName: actionArgsKey: [...methodResultIdx]
 
   // при удалении удаляем в массивах
   // при изменении идём по get-массивам и проверяем, выполняется ли условие query
-  // nIdActions: {}, // nId: { door: { getActionArgs: { ...pathsToInst } } }
+  // nIdMethods: {}, // nId: { door: { getMethodArgs: { ...pathsToInst } } }
 
-  listner: {}, // eventId: onSuccess
+  listner: {}, // actionId: onSuccess
   promise: {}, // door: getterName: argsKey: promise/result
 
   // back
@@ -47,7 +47,7 @@ const g = {
     createTable: [],
   },
   listners: {}, // guest: normId: ?fileds
-  isWsEvent: false,
+  isWsAction: false,
 }
 
 export default g

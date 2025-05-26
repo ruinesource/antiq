@@ -1,5 +1,5 @@
 import g, { openingPromiseResolver } from '../g.js'
-import { filterObj, copy } from '../utils.js'
+import { filterObj, copy } from '../util.js'
 import { door } from './door.js'
 import { putFromResults, rerenderBounded } from './put.js'
 const ws = new WebSocket('ws://localhost:4387')
@@ -18,13 +18,10 @@ let guest
 let wsLogs = {}
 
 export function open(hotel) {
-  // ws.onopen = (e) => {
-  // }
-
   // guest при открытии
   // передаём с каждым ивентом
   // на сервере записываем все используемые guest-normId
-  // на сеттеры смотрим, какие guest на них подписаны, отправляем их туда
+  // на сеттеры смотрим, какие guest на них подписаны, отправляем их им
 
   ws.onmessage = async (msg) => {
     const action = JSON.parse(msg.data)
@@ -63,7 +60,6 @@ export function open(hotel) {
 
   const doors = {}
   for (let k in g.door) {
-    // сделать все _ в upperCase
     doors[`${k}D`] = g.door[k]
   }
 
@@ -78,7 +74,7 @@ export async function sendAction({ action, onSuccess }) {
   const msg = filterObj(action, 'count', 'parent', 'results')
 
   if (wsLogs) wsLogs[action.id] = { front: msg }
-  ws.send(JSON.stringify(filterObj(action, 'count', 'parent', 'results')))
+  ws.send(JSON.stringify(msg))
 
   let resolve
   let reject

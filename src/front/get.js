@@ -7,7 +7,7 @@ import {
   isDoor,
   normId,
   getParentOrAction,
-} from '../utils.js'
+} from '../util.js'
 import { addRelation } from './relations.js'
 
 // i actionId
@@ -19,7 +19,7 @@ import { addRelation } from './relations.js'
 
 // на одно свойство может потребоваться несколько сравнений (и/или)
 
-export async function get(name, id, opts) {
+export async function get(name, id) {
   const { currentAction: action } = g
   g.currentAction = null
   const { count, results } = action

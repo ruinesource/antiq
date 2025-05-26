@@ -7,7 +7,7 @@ import {
   isDoor,
   copy,
   getParentOrAction,
-} from '../utils.js'
+} from '../util.js'
 import { addRelation, removeRelation } from './relations.js'
 import g from '../g.js'
 

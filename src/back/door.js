@@ -2,7 +2,7 @@ import g from '../g.js'
 import { get } from './get.js'
 import { put } from './put.js'
 import { guests, guestsByNormId } from './ws.js'
-import { set, normId } from '../utils.js'
+import { set, normId } from '../util.js'
 
 export function door(name, descFunc, getters = {}, setters = {}, options) {
   g.desc[name] = descFunc

@@ -1,5 +1,5 @@
 import g from '../g.js'
-import { tn, isDoor, isPlainObject } from '../utils.js'
+import { tn, isDoor, isPlainObject } from '../util.js'
 
 // todo: убрать fk door_prop_inArray(id)->book у случая { prop: [{ inArray: {} }] }
 // todo: для элементов массивов внутри массивов указывать x,y,z вместо i

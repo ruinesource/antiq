@@ -1,5 +1,5 @@
 import g from '../g.js'
-import { set } from '../utils.js'
+import { set } from '../util.js'
 
 export function addRelation(parentNId, path, childNId) {
   set(g.parents, [childNId, parentNId, ...path], true)

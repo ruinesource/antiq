@@ -1,6 +1,6 @@
 import { db } from './db.js'
 import g from '../g.js'
-import { delay, isDoor, isPlainObject } from '../utils.js'
+import { delay, isDoor, isPlainObject } from '../util.js'
 
 // на get на сервере мы создаём подписку на все полученные поля сущности
 // и пользуемся ими в оповещениях после put

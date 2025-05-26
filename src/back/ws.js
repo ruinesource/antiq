@@ -1,7 +1,7 @@
 import ws from 'ws'
 import http from 'http'
 import g from '../g.js'
-import { delay } from '../utils.js'
+import { delay } from '../util.js'
 
 const wss = new ws.Server({ noServer: true })
 

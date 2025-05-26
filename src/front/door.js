@@ -1,5 +1,5 @@
 import g from '../g.js'
-import { valToKey, set, getParentOrAction, copy } from '../utils.js'
+import { valToKey, set, getParentOrAction, copy } from '../util.js'
 import { get } from './get.js'
 import { put } from './put.js'
 
@@ -12,13 +12,13 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
   g.desc[name] = descFunc
   g.promise[name] = {}
 
-  for (let k in getters) {
-    door[k] = action(door, getters[k], k)
-    g.promise[name][k] = {}
+  for (let x in getters) {
+    door[x] = action(door, getters[x], x)
+    g.promise[name][x] = {}
   }
 
-  for (let k in setters) {
-    door[k] = action(door, setters[k], k, true)
+  for (let x in setters) {
+    door[x] = action(door, setters[x], x, true)
   }
 
   return door
@@ -32,7 +32,7 @@ export function door(name, descFunc, getters = {}, setters = {}, opts) {
 // если экшн вызвался внутри не через action, то создастся новый экшн
 // и руками отменять придётся два действия в случае ошибки одного из них
 
-function action(door, apiFn, apiName, isSetter) {
+export function action(door, apiFn, apiName, isSetter) {
   // если action внутри action'a
   // то запрос отправляем один раз
   // случай await Promise.all([xMethod, yMethod]) - оптимизация сервера напотом
@@ -124,13 +124,6 @@ function action(door, apiFn, apiName, isSetter) {
       const result = await method(...args)
       g.currentAction = action
 
-      // по какой-то причине
-      // синхронная установка переменных не давала нужного результата
-      // queueMicrotask делал её после await выше
-      // ! не воспроизводится !
-      // queueMicrotask(() => {
-      setMethodsToDoor(action)
-      // })
       return result
     }
   }

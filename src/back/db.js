@@ -1,6 +1,7 @@
 import pg from 'pg'
 
-pg.types.setTypeParser(1114, (x) => x)
+// ???
+// pg.types.setTypeParser(1114, (x) => x)
 
 let client = null
 
@@ -10,7 +11,11 @@ export async function db() {
     client = new Client({
       database: 'test',
     })
-    await client.connect()
+    try {
+      await client.connect()
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   return client.query.bind(client)

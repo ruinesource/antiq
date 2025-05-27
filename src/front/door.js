@@ -71,8 +71,6 @@ export function action(door, apiFn, apiName, isSetter) {
     return processMethod(action)
   }
 
-  // ----------------------------------------------------------------------------- //
-
   async function processMethod(action) {
     const argsKey = valToKey(action.args)
 

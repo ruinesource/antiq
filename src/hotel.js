@@ -10,15 +10,26 @@ export default function hotel(door) {
     () => ({ name: '' }),
     {
       one: async (id) => {
-        teamMemberD.get(id)
-        await teamMemberD.get(1)
-        await bookD.one(49)
+        const tm = await teamMemberD.get(1)
+        const book = await bookD.one(49)
+        return tm
       },
     },
     {
       upd: (diff) => teamMemberD.put(diff),
     }
   )
+
+  // источник - валидаторы сервера
+  // их должно быть можно расширить на фронте
+  // для валидации могут требоваться сущности, а не id
+  class Book {
+    @field(required)
+    name: ''
+
+    @field(oki)
+    books: [bookD]
+  }
 
   const authorD = door(
     'author',
@@ -32,15 +43,20 @@ export default function hotel(door) {
     {
       oki: async () => {
         const result = await authorD.put({ name: 'oki' })
-        console.log(result)
-        const second = await authorD.put({ name: 'doki' })
-        console.log(second)
         return result
       },
       upd: (diff) => authorD.put(diff),
     }
   )
 
+  // form(door, id)
+
+  // создаём/меняем сущности в формах
+  // в запрос может приходить информация для валидации, которая не записывается сама
+  // если А, сущность/поле валидно, если Б - невалидно
+
+  // на оптимистичный put на бэке может потребоваться асинхронщина для недостающих полей
+  // на бэке может подставляться недостающая информация
   const bookD = door(
     'book',
     () => ({
@@ -55,9 +71,8 @@ export default function hotel(door) {
     }),
     {
       x: async () => {
-        const first = await bookD.get(17)
-        const second = await bookD.get(18)
-        return { first, second }
+        const book = await bookD.get(7)
+        return { book }
       },
 
       y: async () => {
@@ -91,7 +106,10 @@ export default function hotel(door) {
       },
     },
     class X {
+      // валидаторы применяются для форм, связанных с этим экшном
       upd = async (diff) => {
+        // для upd должны быть одни валидаторы
+        // для create другие
         const book = await bookD.put(diff)
         return book
       }

@@ -104,7 +104,6 @@ function action(door, apiFn, apiName) {
       const result = await apiFn(...args)
       action.results.push(result)
 
-      console.log(action)
       g.currentAction = action
       return result
     }
